@@ -1,0 +1,68 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Document Processing Dashboard",
+    "tags": ["document-processing"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{handler}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Document Processing Queue",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "celery_queue_length",
+            "legendFormat": "Queue Length"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Processing Time Distribution",
+        "type": "histogram",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, document_processing_duration_seconds_bucket)",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, document_processing_duration_seconds_bucket)",
+            "legendFormat": "50th percentile"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Storage Usage",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "minio_disk_storage_used_bytes",
+            "legendFormat": "Storage Used"
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+} 

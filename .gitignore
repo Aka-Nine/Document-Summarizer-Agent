@@ -1,0 +1,41 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+.ENV/
+.ENV.bak/
+env.bak/
+# Ignore virtual environments
+venv/
+.env
+*.pyc
+__pycache__/
+
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# MyPy, Pyright, etc.
+.mypy_cache/
+.pyright/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# VS Code settings
+.vscode/
+
+# macOS, Linux, Windows artifacts
+.DS_Store
+*.swp
+Thumbs.db
