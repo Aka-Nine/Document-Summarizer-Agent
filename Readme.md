@@ -5,7 +5,9 @@
 This is a document processing platform that takes PDF files uploaded by users and uses artificial intelligence to automatically create summaries and answer questions about the content. Think of it as having an AI assistant that can quickly read through long documents and extract the most important information for you.
 
 ---
-##Flow Diagram
+## Flow Diagram
+
+
 <img width="996" height="1272" alt="Document Processing System Architecture" src="https://github.com/user-attachments/assets/bb3ec2e9-2954-4cb0-96f7-d6fcc7780539" />
 
 ## The Technology Stack Explained
