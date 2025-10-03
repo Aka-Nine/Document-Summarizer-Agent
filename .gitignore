@@ -39,3 +39,7 @@ __pycache__/
 .DS_Store
 *.swp
 Thumbs.db
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/tfplan
