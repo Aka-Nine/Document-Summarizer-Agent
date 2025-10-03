@@ -1,5 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.config import Config
 import os
 import uuid
 from pathlib import Path
@@ -19,14 +20,21 @@ logger = structlog.get_logger()
 class StorageService:
     def __init__(self):
         try:
-            # Initialize S3 client with AWS credentials
+            # Initialize S3-compatible client (MinIO by default)
+            endpoint = getattr(settings, "MINIO_ENDPOINT", None)
+            access_key = getattr(settings, "MINIO_ACCESS_KEY", None)
+            secret_key = getattr(settings, "MINIO_SECRET_KEY", None)
+            bucket_name = getattr(settings, "BUCKET_NAME", None) or getattr(settings, "S3_BUCKET_NAME", None)
+
             self.client = boto3.client(
                 's3',
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=settings.AWS_REGION
+                endpoint_url=f"http://{endpoint}" if endpoint and not endpoint.startswith("http") else endpoint,
+                aws_access_key_id=access_key or settings.AWS_ACCESS_KEY_ID or None,
+                aws_secret_access_key=secret_key or settings.AWS_SECRET_ACCESS_KEY or None,
+                region_name=getattr(settings, "AWS_REGION", "us-east-1"),
+                config=Config(s3={"addressing_style": "path"})
             )
-            self.bucket_name = settings.S3_BUCKET_NAME
+            self.bucket_name = bucket_name
             self._ensure_bucket_exists()
         except NoCredentialsError:
             logger.error("AWS credentials not found")

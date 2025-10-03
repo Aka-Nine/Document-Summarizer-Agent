@@ -230,6 +230,15 @@ class AWSTaskService:
             logger.error("Failed to purge queue", error=str(e))
             return False
 
-# Create a singleton instance
-aws_task_service = AWSTaskService()
+# Lazy singleton accessor to avoid import-time AWS failures
+_aws_task_service_instance = None
+
+def get_aws_task_service() -> "AWSTaskService | None":
+    global _aws_task_service_instance
+    if _aws_task_service_instance is None:
+        try:
+            _aws_task_service_instance = AWSTaskService()
+        except Exception:
+            _aws_task_service_instance = None
+    return _aws_task_service_instance
 

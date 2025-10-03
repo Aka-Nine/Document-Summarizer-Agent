@@ -16,25 +16,24 @@ class Settings(BaseSettings):
     ALLOWED_EXTENSIONS: List[str] = [".pdf", ".txt", ".docx"]
     ALLOWED_MIME_TYPES: List[str] = ["application/pdf", "text/plain", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
 
-    # AWS Configuration
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
+    # MinIO / Object Storage (preferred local/default)
+    MINIO_ENDPOINT: str = "localhost:9000"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin"
+    BUCKET_NAME: str = "document-bucket"
+
+    # Optional AWS fields (unused when running with MinIO)
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
     AWS_REGION: str = "us-east-1"
+    # Legacy S3 bucket name support
+    S3_BUCKET_NAME: str = ""
     
-    # S3 Configuration
-    S3_BUCKET_NAME: str
-    
-    # DynamoDB Configuration
-    DYNAMODB_CACHE_TABLE: str = "document-cache"
-    
-    # ElastiCache Configuration (Optional)
+    # Deprecated AWS-specific configs (kept for compatibility)
+    DYNAMODB_CACHE_TABLE: str = ""
     ELASTICACHE_ENDPOINT: Optional[str] = None
-    
-    # SQS Configuration
-    SQS_QUEUE_NAME: str = "document-processing-queue"
+    SQS_QUEUE_NAME: str = ""
     SQS_QUEUE_URL: Optional[str] = None
-    
-    # Lambda Configuration
     LAMBDA_FUNCTION_NAME: Optional[str] = None
     
     # Database Configuration

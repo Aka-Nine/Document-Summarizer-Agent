@@ -63,14 +63,12 @@ resource "aws_s3_bucket_versioning" "document_storage" {
   }
 }
 
-resource "aws_s3_bucket_encryption" "document_storage" {
+resource "aws_s3_bucket_server_side_encryption_configuration" "document_storage" {
   bucket = aws_s3_bucket.document_storage.id
-  
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"  # Free encryption
-      }
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
 }

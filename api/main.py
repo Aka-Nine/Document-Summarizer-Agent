@@ -27,13 +27,15 @@ try:
     from ..models.database import SessionLocal, User, Document, ProcessingStatus, create_tables
     from ..services.storage_service import StorageService
     from ..services.aws_cache_service import get_aws_cache_service
-    from ..services.aws_task_service import aws_task_service
+    from ..services.aws_task_service import get_aws_task_service
+    from ..services.redis_service import redis_service
 except ImportError:
     from config.setting import settings
     from models.database import SessionLocal, User, Document, ProcessingStatus, create_tables
     from services.storage_service import StorageService
     from services.aws_cache_service import get_aws_cache_service
-    from services.aws_task_service import aws_task_service
+    from services.aws_task_service import get_aws_task_service
+    from services.redis_service import redis_service
 
 logger = structlog.get_logger()
 
@@ -197,11 +199,12 @@ async def upload_document(
 
         question_list = [q.strip() for q in questions.split('\n') if q.strip()] if questions else []
         
-        # Send task to AWS SQS
-        task_id = aws_task_service.send_task(
-            task_name="process_document_task",
-            task_args=[db_document.id, question_list]
-        )
+        # Enqueue task via Celery (Redis)
+        try:
+            from tasks.celery_tasks import process_document_task as celery_task
+            celery_task.delay(db_document.id, question_list)
+        except Exception as e:
+            logger.error("Failed to enqueue Celery task", error=str(e))
 
         return {
             "document_id": db_document.id,
@@ -282,19 +285,19 @@ async def health_check():
     except Exception as e:
         logger.error("Database health check failed", error=str(e))
     try:
-        cache = get_aws_cache_service()
-        if cache:
-            cache.set_key("health_check", "ok", expire_seconds=10)
+        # Redis health
+        from services.redis_service import redis_service as _redis
+        _redis.redis_client.ping()
         health["dependencies"]["cache"] = True
     except Exception as e:
         logger.error("Cache health check failed", error=str(e))
     try:
         storage = StorageService()
-        # Check S3 bucket access
-        storage.client.head_bucket(Bucket=settings.S3_BUCKET_NAME)
+        # Check object storage access (MinIO/S3)
+        storage.client.list_objects_v2(Bucket=storage.bucket_name, MaxKeys=1)
         health["dependencies"]["s3"] = True
     except Exception as e:
-        logger.error("S3 health check failed", error=str(e))
+        logger.error("Object storage health check failed", error=str(e))
     health["status"] = "healthy" if all(health["dependencies"].values()) else "degraded"
     return health
 
