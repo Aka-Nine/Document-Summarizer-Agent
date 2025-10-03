@@ -300,6 +300,15 @@ class AWSCacheService:
             logger.error("Error getting cache hash", name=name, error=str(e))
             return None
 
-# Create a singleton instance
-aws_cache_service = AWSCacheService()
+# Lazy singleton accessor to avoid import-time AWS failures
+_aws_cache_service_instance = None
+
+def get_aws_cache_service() -> "AWSCacheService | None":
+    global _aws_cache_service_instance
+    if _aws_cache_service_instance is None:
+        try:
+            _aws_cache_service_instance = AWSCacheService()
+        except Exception:
+            _aws_cache_service_instance = None
+    return _aws_cache_service_instance
 

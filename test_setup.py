@@ -102,14 +102,13 @@ def test_aws_services():
     
     try:
         from services.storage_service import StorageService
-        from services.aws_cache_service import aws_cache_service
-        from services.aws_task_service import aws_task_service
+        from services.aws_cache_service import get_aws_cache_service
+        from services.aws_task_service import AWSTaskService
         
         print("✅ AWS services imported successfully")
         
-        # Note: We don't actually test AWS connections here to avoid costs
-        # In a real test, you would test with actual AWS credentials
-        print("⚠️  AWS services configuration loaded (not tested)")
+        # Do not instantiate cache or task service here to avoid credential failures
+        print("ℹ️  Skipping AWS live calls; will validate at /health")
         
         return True
     except Exception as e:

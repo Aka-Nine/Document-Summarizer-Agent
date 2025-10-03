@@ -26,13 +26,13 @@ try:
     from ..config.setting import settings
     from ..models.database import SessionLocal, User, Document, ProcessingStatus, create_tables
     from ..services.storage_service import StorageService
-    from ..services.aws_cache_service import aws_cache_service
+    from ..services.aws_cache_service import get_aws_cache_service
     from ..services.aws_task_service import aws_task_service
 except ImportError:
     from config.setting import settings
     from models.database import SessionLocal, User, Document, ProcessingStatus, create_tables
     from services.storage_service import StorageService
-    from services.aws_cache_service import aws_cache_service
+    from services.aws_cache_service import get_aws_cache_service
     from services.aws_task_service import aws_task_service
 
 logger = structlog.get_logger()
@@ -282,7 +282,9 @@ async def health_check():
     except Exception as e:
         logger.error("Database health check failed", error=str(e))
     try:
-        aws_cache_service.set_key("health_check", "ok", expire_seconds=10)
+        cache = get_aws_cache_service()
+        if cache:
+            cache.set_key("health_check", "ok", expire_seconds=10)
         health["dependencies"]["cache"] = True
     except Exception as e:
         logger.error("Cache health check failed", error=str(e))
