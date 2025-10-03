@@ -1,9 +1,16 @@
 from celery import Celery
 from sqlalchemy.orm import Session
-from models.database import SessionLocal, Document, ProcessingStatus
-from core.document_processor import DocumentProcessor
-from services.storage_service import StorageService
-from config.setting import settings
+# Try relative import first, then absolute import
+try:
+    from ..models.database import SessionLocal, Document, ProcessingStatus
+    from ..core.document_processor import DocumentProcessor
+    from ..services.storage_service import StorageService
+    from ..config.setting import settings
+except ImportError:
+    from models.database import SessionLocal, Document, ProcessingStatus
+    from core.document_processor import DocumentProcessor
+    from services.storage_service import StorageService
+    from config.setting import settings
 from typing import List
 import tempfile
 import os

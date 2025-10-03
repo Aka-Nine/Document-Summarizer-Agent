@@ -21,11 +21,19 @@ import filetype  # windows-compatible filetype lib
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 import json
-from config.setting import settings
-from models.database import SessionLocal, User, Document, ProcessingStatus, create_tables
-from services.storage_service import StorageService
-from services.redis_service import RedisService
-from tasks.celery_tasks import process_document_task
+# Try relative import first, then absolute import
+try:
+    from ..config.setting import settings
+    from ..models.database import SessionLocal, User, Document, ProcessingStatus, create_tables
+    from ..services.storage_service import StorageService
+    from ..services.aws_cache_service import aws_cache_service
+    from ..services.aws_task_service import aws_task_service
+except ImportError:
+    from config.setting import settings
+    from models.database import SessionLocal, User, Document, ProcessingStatus, create_tables
+    from services.storage_service import StorageService
+    from services.aws_cache_service import aws_cache_service
+    from services.aws_task_service import aws_task_service
 
 logger = structlog.get_logger()
 
@@ -188,7 +196,12 @@ async def upload_document(
         db.refresh(db_document)
 
         question_list = [q.strip() for q in questions.split('\n') if q.strip()] if questions else []
-        process_document_task.delay(db_document.id, question_list)
+        
+        # Send task to AWS SQS
+        task_id = aws_task_service.send_task(
+            task_name="process_document_task",
+            task_args=[db_document.id, question_list]
+        )
 
         return {
             "document_id": db_document.id,
@@ -258,8 +271,8 @@ async def health_check():
         "timestamp": datetime.utcnow(),
         "dependencies": {
             "database": False,
-            "redis": False,
-            "minio": False
+            "cache": False,
+            "s3": False
         }
     }
     try:
@@ -269,17 +282,17 @@ async def health_check():
     except Exception as e:
         logger.error("Database health check failed", error=str(e))
     try:
-        redis = RedisService()
-        redis.set_key("health_check", "ok", expire_seconds=10)
-        health["dependencies"]["redis"] = True
+        aws_cache_service.set_key("health_check", "ok", expire_seconds=10)
+        health["dependencies"]["cache"] = True
     except Exception as e:
-        logger.error("Redis health check failed", error=str(e))
+        logger.error("Cache health check failed", error=str(e))
     try:
         storage = StorageService()
-        storage.client.bucket_exists(settings.BUCKET_NAME)
-        health["dependencies"]["minio"] = True
+        # Check S3 bucket access
+        storage.client.head_bucket(Bucket=settings.S3_BUCKET_NAME)
+        health["dependencies"]["s3"] = True
     except Exception as e:
-        logger.error("MinIO health check failed", error=str(e))
+        logger.error("S3 health check failed", error=str(e))
     health["status"] = "healthy" if all(health["dependencies"].values()) else "degraded"
     return health
 

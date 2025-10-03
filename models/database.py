@@ -8,7 +8,12 @@ import os
 
 # Add the project root directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.setting import settings
+
+# Try relative import first, then absolute import
+try:
+    from ..config.setting import settings
+except ImportError:
+    from config.setting import settings
 
 # Use DATABASE_URL from environment or settings
 DATABASE_URL = os.getenv("DATABASE_URL", getattr(settings, "DATABASE_URL", None))

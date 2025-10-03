@@ -1,38 +1,65 @@
-from minio import Minio
-from minio.error import S3Error
+import boto3
+from botocore.exceptions import ClientError, NoCredentialsError
 import os
 import uuid
 from pathlib import Path
-from config.setting import settings
+# Try relative import first, then absolute import
+try:
+    from ..config.setting import settings
+except ImportError:
+    from config.setting import settings
 import structlog
 from datetime import timedelta
 import traceback
 import tempfile
+import io
+from typing import Optional
 logger = structlog.get_logger()
 
 class StorageService:
     def __init__(self):
-        self.client = Minio(
-            settings.MINIO_ENDPOINT,
-            access_key=settings.MINIO_ACCESS_KEY,
-            secret_key=settings.MINIO_SECRET_KEY,
-            secure=False
-        )
-        self._ensure_bucket_exists()
+        try:
+            # Initialize S3 client with AWS credentials
+            self.client = boto3.client(
+                's3',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_REGION
+            )
+            self.bucket_name = settings.S3_BUCKET_NAME
+            self._ensure_bucket_exists()
+        except NoCredentialsError:
+            logger.error("AWS credentials not found")
+            raise
+        except Exception as e:
+            logger.error("Failed to initialize S3 client", error=str(e))
+            raise
     
     def _ensure_bucket_exists(self):
         try:
-            logger.info("Checking if bucket exists", bucket=settings.BUCKET_NAME)
-            if not self.client.bucket_exists(settings.BUCKET_NAME):
-                logger.info("Creating bucket", bucket=settings.BUCKET_NAME)
-                self.client.make_bucket(settings.BUCKET_NAME)
-                logger.info("Bucket created successfully", bucket=settings.BUCKET_NAME)
+            logger.info("Checking if S3 bucket exists", bucket=self.bucket_name)
+            self.client.head_bucket(Bucket=self.bucket_name)
+            logger.info("S3 bucket exists", bucket=self.bucket_name)
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == '404':
+                logger.info("Creating S3 bucket", bucket=self.bucket_name)
+                try:
+                    if settings.AWS_REGION == 'us-east-1':
+                        # us-east-1 doesn't need LocationConstraint
+                        self.client.create_bucket(Bucket=self.bucket_name)
+                    else:
+                        self.client.create_bucket(
+                            Bucket=self.bucket_name,
+                            CreateBucketConfiguration={'LocationConstraint': settings.AWS_REGION}
+                        )
+                    logger.info("S3 bucket created successfully", bucket=self.bucket_name)
+                except ClientError as create_error:
+                    logger.error("Failed to create S3 bucket", error=str(create_error))
+                    raise
             else:
-                logger.info("Bucket already exists", bucket=settings.BUCKET_NAME)
-        except S3Error as e:
-            logger.error("Failed to create bucket", error=str(e))
-            traceback.print_exc()
-            raise
+                logger.error("Failed to check S3 bucket", error=str(e))
+                raise
     
     async def save_file(self, file_content: bytes, filename: str) -> str:
         """Save file and return the file path"""
@@ -41,41 +68,54 @@ class StorageService:
         object_name = f"{file_id}{file_extension}"
         
         try:
-            # Save to local temp first using system temp directory
-            temp_dir = tempfile.gettempdir()
-            temp_path = os.path.join(temp_dir, object_name)
-            logger.info("Saving temporary file", temp_path=temp_path)
+            logger.info("Uploading to S3", bucket=self.bucket_name, object=object_name)
             
-            with open(temp_path, "wb") as f:
-                f.write(file_content)
-            
-            # Upload to MinIO
-            logger.info("Uploading to MinIO", bucket=settings.BUCKET_NAME, object=object_name)
-            self.client.fput_object(
-                settings.BUCKET_NAME,
-                object_name,
-                temp_path
+            # Upload directly to S3 using put_object
+            self.client.put_object(
+                Bucket=self.bucket_name,
+                Key=object_name,
+                Body=file_content,
+                ContentType='application/pdf' if file_extension == '.pdf' else 'application/octet-stream'
             )
             
-            # Clean up temp file
-            logger.info("Cleaning up temporary file", temp_path=temp_path)
-            os.remove(temp_path)
-            
+            logger.info("File uploaded successfully to S3", object=object_name)
             return object_name
             
-        except S3Error as e:
-            logger.error("Failed to save file", filename=filename, error=str(e))
-            traceback.print_exc()  # Print the full traceback to the console
+        except ClientError as e:
+            logger.error("Failed to save file to S3", filename=filename, error=str(e))
+            traceback.print_exc()
             raise
     
-    def get_file_url(self, object_name: str) -> str:
+    def get_file_url(self, object_name: str, expiration: int = 3600) -> str:
         """Get presigned URL for file access"""
         try:
-            return self.client.presigned_get_object(
-                settings.BUCKET_NAME,
-                object_name,
-                expires=timedelta(hours=1)
+            return self.client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': self.bucket_name, 'Key': object_name},
+                ExpiresIn=expiration
             )
-        except S3Error as e:
+        except ClientError as e:
             logger.error("Failed to get file URL", object_name=object_name, error=str(e))
             raise
+    
+    def download_file(self, object_name: str, local_path: str) -> bool:
+        """Download file from S3 to local path"""
+        try:
+            logger.info("Downloading file from S3", object=object_name, local_path=local_path)
+            self.client.download_file(self.bucket_name, object_name, local_path)
+            logger.info("File downloaded successfully", object=object_name)
+            return True
+        except ClientError as e:
+            logger.error("Failed to download file from S3", object_name=object_name, error=str(e))
+            return False
+    
+    def delete_file(self, object_name: str) -> bool:
+        """Delete file from S3"""
+        try:
+            logger.info("Deleting file from S3", object=object_name)
+            self.client.delete_object(Bucket=self.bucket_name, Key=object_name)
+            logger.info("File deleted successfully", object=object_name)
+            return True
+        except ClientError as e:
+            logger.error("Failed to delete file from S3", object_name=object_name, error=str(e))
+            return False

@@ -7,7 +7,12 @@ import structlog
 
 # Add the project root directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.setting import settings
+
+# Try relative import first, then absolute import
+try:
+    from ..config.setting import settings
+except ImportError:
+    from config.setting import settings
 
 logger = structlog.get_logger()
 
