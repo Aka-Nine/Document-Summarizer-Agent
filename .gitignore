@@ -1,7 +1,24 @@
-# Python bytecode
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Virtual environments
 venv/
@@ -11,31 +28,81 @@ env/
 .ENV/
 .ENV.bak/
 env.bak/
-# Ignore virtual environments
-venv/
-.env
-*.pyc
-__pycache__/
-
 
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # Logs
 *.log
+logs/
+*.log.*
+infra/logs/*
+!infra/logs/.gitkeep
 
-# MyPy, Pyright, etc.
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+test-results/
+
+# Type checking
 .mypy_cache/
 .pyright/
+.pytype/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
 
-# VS Code settings
-.vscode/
+# Docker
+.dockerignore
 
-# macOS, Linux, Windows artifacts
-.DS_Store
+# Temporary files
+*.tmp
+*.bak
 *.swp
-Thumbs.db
+*~
+
+# Documentation builds
+docs/_build/
+site/
+
+# Application specific
+*.db
+*.sqlite
+*.sqlite3
+
+# Storage and databases
+storage/*
+!storage/.gitkeep
+chroma_db/*
+!chroma_db/.gitkeep
+logs/*.log
+!logs/.gitkeep
+
+# Temporary cleanup scripts (if any remain)
+*cleanup*.py
+*reorganize*.py
+*finalize*.py
+*organize*.py
