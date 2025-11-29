@@ -81,7 +81,7 @@ python run.py
 
 - MongoDB: `mongodb+srv://Nine:2xGBEpr60Yde3M8m@ninecluster.ltpa6.mongodb.net/`
 - Redis: `rediss://:nPFMbSeVXccrygquELB6IbWWeNbSmltl@redis-14497...`
-- Groq: `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`
+- Groq: `your_groq_api_key_here`
 - Gemini: `AIzaSyBDesjWhr6Y1keeL553y60sNQuEo-jNxx8`
 - LangChain: `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`
 

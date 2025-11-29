@@ -108,7 +108,7 @@ If you want to use Groq instead of Gemini:
 
 ```env
 LLM_PROVIDER=groq
-GROQ_API_KEY=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
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
 ---

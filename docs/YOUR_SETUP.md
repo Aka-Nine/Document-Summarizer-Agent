@@ -150,7 +150,7 @@ BUCKET_NAME=documents
 # LLM
 # ============================================
 LLM_PROVIDER=groq
-GROQ_API_KEY=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
+GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama3-8b-8192
 
 # Gemini (Alternative)
