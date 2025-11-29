@@ -1,0 +1,52 @@
+# Simplified requirements for testing without PostgreSQL
+# Use this for initial setup testing
+
+# Core FastAPI & server
+fastapi>=0.100.0
+uvicorn>=0.20.0
+python-multipart>=0.0.20
+
+# Database & migrations (without PostgreSQL)
+SQLAlchemy>=2.0.0
+alembic
+
+# Celery, Redis, Flower
+celery>=5.1.2
+redis>=5.0.0
+flower>=2.0.0
+
+# AWS Services
+boto3>=1.34.0
+botocore>=1.34.0
+
+# Security & auth
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+email-validator>=2.1.0
+
+# Rate limiting
+slowapi>=0.1.9
+limits>=3.0.0
+
+# Environment management
+python-dotenv>=1.0.1
+pydantic>=2.7.4
+pydantic-settings>=2.0.0
+
+# AI / Langchain stack
+langchain>=0.3.0
+langchain-groq>=0.3.0
+langchain-community
+langchain-core>=0.3.0
+langchain-text-splitters>=0.3.0
+
+# PDF & file utilities
+pypdf>=5.0.0
+reportlab
+python-magic>=0.4.27
+
+# Monitoring
+prometheus-client
+
+# Logging
+structlog>=21.1.0
