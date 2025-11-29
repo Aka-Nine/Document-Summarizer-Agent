@@ -4,6 +4,7 @@ Production-ready FastAPI application with RAG support
 """
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -64,6 +65,15 @@ except ImportError as e:
         logger.info("SQL API routes loaded as fallback")
     except ImportError:
         logger.error("No API routes available")
+
+# Serve frontend static files (if frontend directory exists)
+try:
+    frontend_path = Path(__file__).parent.parent.parent / "frontend"
+    if frontend_path.exists() and frontend_path.is_dir():
+        app.mount("/frontend", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+        logger.info("Frontend static files mounted at /frontend")
+except Exception as e:
+    logger.warning("Frontend static files not available", error=str(e))
 
 # Security
 security = HTTPBearer()
