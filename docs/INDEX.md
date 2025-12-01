@@ -6,7 +6,7 @@ This directory contains all project documentation files.
 
 ### Quick Start
 - [QUICK_START.md](QUICK_START.md) - 5-minute setup guide
-- [START_HERE.md](START_HERE.md) - Current setup status
+- [START_HERE.md](START_HERE.md) - Getting started guide
 
 ### Setup Guides
 - [SETUP_GUIDE.md](SETUP_GUIDE.md) - Comprehensive setup instructions
@@ -19,14 +19,11 @@ This directory contains all project documentation files.
 - [ENTERPRISE_UPGRADE.md](ENTERPRISE_UPGRADE.md) - Enterprise platform upgrade
 - [RAG_ENABLED.md](RAG_ENABLED.md) - RAG functionality
 
-### Structure & Status
-- [PRODUCTION_STRUCTURE.md](PRODUCTION_STRUCTURE.md) - Production structure
-- [STRUCTURE_FINAL.md](STRUCTURE_FINAL.md) - Final structure details
-- [STRUCTURE_VERIFIED.md](STRUCTURE_VERIFIED.md) - Structure verification
-- [COMPLETE_ERRORS_FIXED.md](COMPLETE_ERRORS_FIXED.md) - Error fixes summary
+### Structure & Reference
+- [PRODUCTION_STRUCTURE.md](PRODUCTION_STRUCTURE.md) - Production structure guide
 
 ### Other Documentation
-- [LIBRARIES.md](LIBRARIES.md) - Library list
+- [LIBRARIES.md](LIBRARIES.md) - Library list and usage
 - [CHANGELOG.md](CHANGELOG.md) - Change log
 - [CHECKLIST.md](CHECKLIST.md) - Setup checklist
 

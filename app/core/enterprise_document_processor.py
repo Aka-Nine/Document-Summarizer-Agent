@@ -5,9 +5,22 @@ Production-ready document processing with retrieval augmented generation
 import time
 from typing import List, Dict, Any, Optional
 from langchain_groq import ChatGroq
-from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
-from langchain_google_genai import ChatGoogleGenerativeAI
+
+# Optional LLM provider imports - only import if needed
+try:
+    from langchain_openai import ChatOpenAI
+except ImportError:
+    ChatOpenAI = None
+
+try:
+    from langchain_anthropic import ChatAnthropic
+except ImportError:
+    ChatAnthropic = None
+
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except ImportError:
+    ChatGoogleGenerativeAI = None
 # LangChain chains - using direct LLM calls instead
 # from langchain.chains.summarize import load_summarize_chain
 # from langchain.chains.question_answering import load_qa_chain
@@ -45,6 +58,8 @@ class EnterpriseDocumentProcessor:
                 max_retries=3
             )
         elif provider == "openai":
+            if ChatOpenAI is None:
+                raise ValueError("langchain-openai is not installed. Install it with: pip install langchain-openai")
             if not settings.OPENAI_API_KEY:
                 raise ValueError("OPENAI_API_KEY is required")
             return ChatOpenAI(
@@ -54,6 +69,8 @@ class EnterpriseDocumentProcessor:
                 max_retries=3
             )
         elif provider == "anthropic":
+            if ChatAnthropic is None:
+                raise ValueError("langchain-anthropic is not installed. Install it with: pip install langchain-anthropic")
             if not settings.ANTHROPIC_API_KEY:
                 raise ValueError("ANTHROPIC_API_KEY is required")
             return ChatAnthropic(
@@ -63,6 +80,8 @@ class EnterpriseDocumentProcessor:
                 max_retries=3
             )
         elif provider == "gemini":
+            if ChatGoogleGenerativeAI is None:
+                raise ValueError("langchain-google-genai is not installed. Install it with: pip install langchain-google-genai")
             if not settings.GEMINI_API_KEY:
                 raise ValueError("GEMINI_API_KEY is required")
             return ChatGoogleGenerativeAI(
@@ -215,9 +234,11 @@ Answer:"""
             full_text = "\n\n".join([doc.page_content for doc in documents])
             
             # Create summary prompt
+            # Limit text length to avoid token limits
+            text_to_summarize = full_text[:10000] if len(full_text) > 10000 else full_text
             summary_prompt = f"""Please provide a comprehensive summary of the following document:
 
-{document}
+{text_to_summarize}
 
 Summary:"""
             
@@ -258,17 +279,12 @@ Summary:"""
                             for result in context_results
                         ])
                         
-                        # Use QA chain with retrieved context
-                        qa_chain = load_qa_chain(
-                            self.llm,
-                            chain_type="stuff",
-                            prompt=self.qa_prompt
-                        )
-                        context_doc = LangchainDocument(page_content=context_text)
-                        answer = qa_chain.run(
-                            input_documents=[context_doc],
-                            question=question
-                        )
+                        # Use LLM directly with prompt (no chain needed)
+                        prompt_text = self.qa_prompt.format(context=context_text, question=question)
+                        from langchain_core.messages import HumanMessage
+                        messages = [HumanMessage(content=prompt_text)]
+                        response = await self.llm.ainvoke(messages)
+                        answer = response.content if hasattr(response, 'content') else str(response)
                     else:
                         # Fallback to summary if no context found
                         answer = await self._answer_from_summary(question, chunks)

@@ -14,10 +14,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-try:
-    from app.config.settings import settings
-except ImportError:
-    from app.config.setting import settings
+from app.config.settings import settings
 
 logger = structlog.get_logger()
 

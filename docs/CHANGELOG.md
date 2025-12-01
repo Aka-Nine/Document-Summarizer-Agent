@@ -5,7 +5,7 @@
 ### Removed
 - ❌ `test/` directory - Test files removed (not production code)
 - ❌ `docs/` directory - Sample PDF files removed
-- ❌ `check_system.py` - Temporary diagnostic script
+ - ❌ `scripts/check_system.py` - Temporary diagnostic script
 - ❌ `SYSTEM_CHECK_REPORT.md` - Temporary report
 - ❌ `run_commands.txt` - Temporary notes file
 - ❌ `scripts/test_api.py` - Test script removed

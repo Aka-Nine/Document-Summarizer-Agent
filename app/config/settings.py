@@ -97,7 +97,7 @@ class Settings(BaseSettings):
     FILESYSTEM_BASE_URL: str = "http://localhost:8000/files"  # Base URL for file access
     
     # MongoDB Configuration
-    MONGODB_URL: str  # MongoDB connection string
+    MONGODB_URL: str = "mongodb+srv://Nine:2xGBEpr60Yde3M8m@ninecluster.ltpa6.mongodb.net/?appName=NIneCluster"  # MongoDB connection string
     MONGODB_DB_NAME: str = "doc_intelligence"  # Database name
     
     # Database Connection Pooling (for MongoDB)
@@ -124,7 +124,7 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
     
     # Vector Database Configuration
-    VECTOR_DB_PROVIDER: VectorDBProvider = VectorDBProvider.PINECONE
+    VECTOR_DB_PROVIDER: VectorDBProvider = VectorDBProvider.CHROMA
     VECTOR_DB_INDEX_NAME: str = "document-intelligence"
     
     # Pinecone
@@ -144,6 +144,11 @@ class Settings(BaseSettings):
     
     # Chroma
     CHROMA_PERSIST_DIR: Optional[str] = "./chroma_db"
+    CHROMA_API_KEY: Optional[str] = None
+    CHROMA_TENANT: Optional[str] = None
+    CHROMA_DATABASE: Optional[str] = None
+    CHROMA_SERVER_HOST: Optional[str] = None  # For Chroma Cloud endpoint
+    CHROMA_SERVER_PORT: int = 8000
     
     # OpenSearch
     OPENSEARCH_URL: Optional[str] = None

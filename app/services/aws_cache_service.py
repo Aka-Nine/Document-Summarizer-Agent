@@ -5,11 +5,7 @@ import structlog
 from typing import Optional, Any, Dict
 from datetime import datetime, timedelta
 import os
-# Try relative import first, then absolute import
-try:
-    from ..config.setting import settings
-except ImportError:
-    from config.setting import settings
+from app.config.settings import settings
 
 logger = structlog.get_logger()
 

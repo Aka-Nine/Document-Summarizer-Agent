@@ -16,11 +16,7 @@ from passlib.context import CryptContext
 from bson import ObjectId
 from bson.errors import InvalidId
 
-# Import with fallback for compatibility
-try:
-    from app.config.settings import settings
-except ImportError:
-    from app.config.setting import settings
+from app.config.settings import settings
 
 from app.models.mongodb_database import (
     get_users_collection, get_documents_collection, get_queries_collection,
@@ -32,7 +28,10 @@ from app.tasks.celery_tasks import process_document_task, query_document_task
 
 logger = structlog.get_logger()
 
-router = APIRouter(prefix=settings.API_V1_PREFIX, tags=["v1"])
+# Use an `/auth` sub-prefix for authentication endpoints so tests and clients
+# calling `/api/v1/auth/*` will match. Other document/search routes remain
+# under the main API v1 prefix.
+router = APIRouter(prefix=f"{settings.API_V1_PREFIX}/auth", tags=["v1"])
 
 # Security setup
 security = HTTPBearer()

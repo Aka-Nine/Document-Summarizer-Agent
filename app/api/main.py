@@ -10,7 +10,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from sqlalchemy.orm import Session
 from typing import Optional
 import structlog
 from datetime import datetime, timedelta
@@ -23,7 +22,7 @@ import uuid
 try:
     from app.config.settings import settings
 except ImportError:
-    from app.config.setting import settings
+    from app.config.settings import settings
 
 from app.models.mongodb_database import get_database, get_users_collection, create_indexes
 from app.services.redis_service import RedisService
@@ -60,7 +59,7 @@ except ImportError as e:
     logger.warning("MongoDB routes not available", error=str(e))
     # Try SQL version as fallback
     try:
-        from app.api.v1.routes import router as v1_router
+        from app.api.v1.routes_mongodb import router as v1_router
         app.include_router(v1_router)
         logger.info("SQL API routes loaded as fallback")
     except ImportError:
@@ -126,13 +125,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Helper functions (exported for v1 routes)
-def get_db():
-    """Database dependency (MongoDB)"""
-    # MongoDB doesn't need session management like SQLAlchemy
-    # Just yield the database instance
-    yield get_database()
-
-
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify password"""
     return pwd_context.verify(plain_password, hashed_password)

@@ -19,7 +19,8 @@ RUN python -m pip install --upgrade pip && \
 
 # Copy application code
 COPY app/ ./app/
-COPY run.py celery_worker.py ./
+COPY run.py ./
+COPY scripts/celery_worker.py ./
 
 # Create logs directory (if used in your app)
 RUN mkdir -p /app/logs

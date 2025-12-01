@@ -264,24 +264,40 @@ class QdrantVectorDBService(VectorDBInterface):
 
 
 class ChromaVectorDBService(VectorDBInterface):
-    """Chroma Vector Database Service (Local)"""
+    """Chroma Vector Database Service (Local or Cloud)"""
     
     def __init__(self):
         try:
             import chromadb
             from chromadb.config import Settings as ChromaSettings
             
-            persist_dir = settings.CHROMA_PERSIST_DIR or "./chroma_db"
-            self.client = chromadb.PersistentClient(
-                path=persist_dir,
-                settings=ChromaSettings(anonymized_telemetry=False)
-            )
+            # Check if cloud credentials are provided
+            if settings.CHROMA_API_KEY and settings.CHROMA_TENANT and settings.CHROMA_DATABASE:
+                # Use Chroma Cloud via API
+                logger.info("Initializing Chroma Cloud client", tenant=settings.CHROMA_TENANT, database=settings.CHROMA_DATABASE)
+                
+                # Create Chroma Cloud client with proper authentication
+                self.client = chromadb.CloudClient(
+                    tenant=settings.CHROMA_TENANT,
+                    database=settings.CHROMA_DATABASE,
+                    api_key=settings.CHROMA_API_KEY
+                )
+                init_type = "Chroma Cloud"
+            else:
+                # Use local persistence
+                persist_dir = settings.CHROMA_PERSIST_DIR or "./chroma_db"
+                self.client = chromadb.PersistentClient(
+                    path=persist_dir,
+                    settings=ChromaSettings(anonymized_telemetry=False)
+                )
+                init_type = f"Chroma Local (persist_dir={persist_dir})"
+            
             self.collection_name = settings.VECTOR_DB_INDEX_NAME or "document-intelligence"
             self.collection = self.client.get_or_create_collection(
                 name=self.collection_name,
                 metadata={"hnsw:space": "cosine"}
             )
-            logger.info("Chroma vector DB initialized", collection=self.collection_name, persist_dir=persist_dir)
+            logger.info("Chroma vector DB initialized", collection=self.collection_name, init_type=init_type)
         except ImportError:
             raise ImportError("chromadb is required. Install with: pip install chromadb")
         except Exception as e:

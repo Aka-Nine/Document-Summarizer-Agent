@@ -8,10 +8,7 @@ import structlog
 # Add the project root directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-try:
-    from app.config.settings import settings
-except ImportError:
-    from app.config.setting import settings
+from app.config.settings import settings
 
 logger = structlog.get_logger()
 
@@ -172,5 +169,7 @@ class RedisService:
             logger.error("Error getting Redis hash", name=name, error=str(e))
             return None
 
-# Create a singleton instance
-redis_service = RedisService()
+    @classmethod
+    def create(cls) -> "RedisService":
+        """Factory method to create RedisService instances without forcing a global instance at import time."""
+        return cls()

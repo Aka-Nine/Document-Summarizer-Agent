@@ -71,7 +71,7 @@ doc-summ-agent/
 │   └── .gitkeep
 │
 ├── run.py                        # Application entry point
-├── celery_worker.py              # Celery worker entry point
+├── scripts/celery_worker.py      # Celery worker entry point
 ├── requirements.txt              # Python dependencies
 ├── Dockerfile                    # Docker image definition
 ├── docker-compose.yml            # Docker Compose configuration

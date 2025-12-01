@@ -19,10 +19,7 @@ from typing import List, Optional
 from datetime import datetime
 
 # Import settings with fallback
-try:
-    from app.config.settings import settings
-except ImportError:
-    from app.config.setting import settings
+from app.config.settings import settings
 
 logger = structlog.get_logger()
 

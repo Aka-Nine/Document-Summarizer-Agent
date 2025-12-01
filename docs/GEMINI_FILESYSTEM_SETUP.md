@@ -30,7 +30,7 @@ Add these to your `.env` file:
 # LLM - Gemini is PRIMARY
 # ============================================
 LLM_PROVIDER=gemini
-GEMINI_API_KEY=AIzaSyBDesjWhr6Y1keeL553y60sNQuEo-jNxx8
+GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-pro
 
 # ============================================
@@ -43,14 +43,14 @@ FILESYSTEM_BASE_URL=http://localhost:8000/files
 # ============================================
 # MONGODB (Already configured)
 # ============================================
-MONGODB_URL=mongodb+srv://Nine:2xGBEpr60Yde3M8m@ninecluster.ltpa6.mongodb.net/?appName=NIneCluster
+MONGODB_URL=mongodb+srv://your_username:your_password@cluster.mongodb.net/?appName=NIneCluster
 MONGODB_DB_NAME=doc_intelligence
 
 # ============================================
 # REDIS CLOUD (Already configured)
 # ============================================
 REDIS_PROVIDER=redis_cloud
-REDIS_URL=rediss://:nPFMbSeVXccrygquELB6IbWWeNbSmltl@redis-14497.c325.us-east-1-4.ec2.cloud.redislabs.com:14497
+REDIS_URL=rediss://:your_password@host:port
 
 # ============================================
 # SECURITY (Already configured)
@@ -60,7 +60,7 @@ SECRET_KEY=Dz9pciTZVR4p2GmtAUmVsuiOUMfxyccu3q0WvFf8-Qc
 # ============================================
 # LANGCHAIN (Already configured)
 # ============================================
-LANGCHAIN_API_KEY=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
+LANGCHAIN_API_KEY=your_langchain_api_key_here
 LANGCHAIN_TRACING_V2=true
 ```
 
