@@ -8,7 +8,9 @@ import os
 # Load environment
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    import os
+    config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config', '.env')
+    load_dotenv(config_path)
 except:
     pass
 

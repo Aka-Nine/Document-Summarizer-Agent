@@ -237,7 +237,7 @@ class Settings(BaseSettings):
     HEALTH_CHECK_INTERVAL: int = 30  # seconds
     
     class Config:
-        env_file = ".env"
+        env_file = "config/.env"
         env_file_encoding = "utf-8"
         case_sensitive = True
 
