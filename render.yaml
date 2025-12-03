@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: document-summarizer-agent
+    env: docker
+    plan: starter # choose appropriate plan (starter/free/standard)
+    dockerfilePath: config/Dockerfile
+    region: oregon
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+    startCommand: "uvicorn app.api.main:app --host 0.0.0.0 --port $PORT"
+    # Note: Secrets (DB URI, API keys) should be set in Render Dashboard as environment secrets
+    # Required secrets:
+    # - MONGODB_URI
+    # - DATABASE_NAME
+    # - REDIS_URL
+    # - CHROMA_API_KEY
+    # - CHROMA_TENANT
+    # - CHROMA_DATABASE
+    # - JWT_SECRET_KEY
+    # - GEMINI_API_KEY
