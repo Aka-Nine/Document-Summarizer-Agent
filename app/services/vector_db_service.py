@@ -406,3 +406,90 @@ class VectorDBService:
         else:
             raise ValueError(f"Unsupported vector DB provider: {provider}")
 
+
+class InMemoryVectorDBService(VectorDBInterface):
+    """A lightweight in-memory fallback vector DB for environments without an external vector store.
+    This is intentionally minimal: it stores vectors in a dict and supports basic upsert/search/delete for testing and degraded mode.
+    """
+
+    def __init__(self):
+        self._store = {}
+        self._metadatas = {}
+        self._documents = {}
+        logger.info("Initialized InMemoryVectorDBService (fallback)")
+
+    async def create_index(self, dimension: int, index_name: Optional[str] = None) -> bool:
+        return True
+
+    async def upsert_vectors(self, vectors: List[Dict[str, Any]]) -> bool:
+        try:
+            for v in vectors:
+                vid = v.get("id", str(uuid.uuid4()))
+                self._store[vid] = v["vector"]
+                self._metadatas[vid] = v.get("metadata", {})
+                self._documents[vid] = v.get("text", "")
+            logger.info("InMemory upsert", count=len(vectors))
+            return True
+        except Exception as e:
+            logger.error("InMemory upsert failed", error=str(e))
+            raise
+
+    async def search(self, query_vector: List[float], top_k: int = 5, filter_dict: Optional[Dict] = None) -> List[Dict]:
+        try:
+            # naive linear search using cosine similarity fallback to euclidean if dimensions mismatch
+            from math import sqrt
+
+            def dot(a, b):
+                return sum(x * y for x, y in zip(a, b))
+
+            def norm(a):
+                return sqrt(sum(x * x for x in a))
+
+            results = []
+            for vid, vec in self._store.items():
+                try:
+                    score = 0.0
+                    if len(vec) == len(query_vector):
+                        denom = (norm(vec) * norm(query_vector))
+                        score = (dot(vec, query_vector) / denom) if denom != 0 else 0.0
+                    results.append({"id": vid, "score": score, "metadata": self._metadatas.get(vid, {}), "text": self._documents.get(vid, "")})
+                except Exception:
+                    continue
+
+            results.sort(key=lambda r: r["score"], reverse=True)
+            return results[:top_k]
+        except Exception as e:
+            logger.error("InMemory search failed", error=str(e))
+            raise
+
+    async def delete_vectors(self, vector_ids: List[str]) -> bool:
+        try:
+            for vid in vector_ids:
+                self._store.pop(vid, None)
+                self._metadatas.pop(vid, None)
+                self._documents.pop(vid, None)
+            logger.info("InMemory delete", count=len(vector_ids))
+            return True
+        except Exception as e:
+            logger.error("InMemory delete failed", error=str(e))
+            raise
+
+    async def get_stats(self) -> Dict[str, Any]:
+        try:
+            count = len(self._store)
+            return {"total_vectors": count, "vectors_count": count, "indexed_vectors_count": count}
+        except Exception as e:
+            logger.error("InMemory get_stats failed", error=str(e))
+            raise
+
+
+def create_vector_db_service_safe() -> VectorDBInterface:
+    """Create the requested vector DB service but fall back to the in-memory service on failure.
+    This prevents import-time failures from crashing the whole app when optional dependencies (like chromadb) are missing or misconfigured.
+    """
+    try:
+        return VectorDBService.create()
+    except Exception as e:
+        logger.warning("Falling back to InMemoryVectorDBService due to vector DB init failure", error=str(e))
+        return InMemoryVectorDBService()
+

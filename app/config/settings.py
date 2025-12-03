@@ -51,8 +51,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS and Security
-    ALLOWED_ORIGINS: List[str]
-    ALLOWED_HOSTS: List[str]
+    ALLOWED_ORIGINS: List[str] = ["*"]
+    ALLOWED_HOSTS: List[str] = ["*"]
     TRUSTED_PROXIES: List[str] = ["127.0.0.1", "localhost"]
     
     # File Upload
@@ -237,7 +237,11 @@ class Settings(BaseSettings):
     HEALTH_CHECK_INTERVAL: int = 30  # seconds
     
     class Config:
-        env_file = "config/.env"
+        # Allow overriding the path to an env file via the ENV_FILE_PATH environment variable.
+        # If ENV_FILE_PATH is not set, do not force-loading a file so that container/compose
+        # provided environment variables take precedence.
+        import os
+        env_file = os.getenv("ENV_FILE_PATH", None)
         env_file_encoding = "utf-8"
         case_sensitive = True
 

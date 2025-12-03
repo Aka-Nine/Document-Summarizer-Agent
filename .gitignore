@@ -33,6 +33,7 @@ env.bak/
 .env
 .env.*
 !.env.example
+config/.env
 
 # Logs
 *.log
