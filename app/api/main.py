@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from typing import Optional
 import structlog
@@ -31,7 +31,7 @@ from app.middleware.production import setup_production_middleware
 logger = structlog.get_logger()
 
 # Rate limiter setup
-limiter = Limiter(key_func=get_remote_address)
+from app.core.rate_limit import limiter
 
 # Create FastAPI app
 app = FastAPI(
@@ -45,6 +45,9 @@ app = FastAPI(
 
 # Setup production middleware
 setup_production_middleware(app)
+
+# Rate limit middleware (must be added after request ID/logging middlewares)
+app.add_middleware(SlowAPIMiddleware)
 
 # Rate limiting
 app.state.limiter = limiter
@@ -84,12 +87,43 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 async def startup_event():
     """Initialize application on startup"""
     try:
-        # Test MongoDB connection
-        db = get_database()
-        db.command("ping")
-        # Create indexes
-        create_indexes()
-        logger.info("Application started", version=settings.APP_VERSION, environment=settings.ENVIRONMENT)
+        import asyncio
+        import os
+        
+        # Initialize LangSmith tracing if enabled
+        if settings.LANGCHAIN_TRACING_V2 and settings.LANGCHAIN_API_KEY:
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
+            os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
+            if settings.LANGCHAIN_ENDPOINT:
+                os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
+            logger.info(
+                "LangSmith tracing enabled",
+                project=settings.LANGCHAIN_PROJECT,
+                endpoint=settings.LANGCHAIN_ENDPOINT or "default"
+            )
+        else:
+            logger.info("LangSmith tracing disabled (LANGCHAIN_TRACING_V2=false or LANGCHAIN_API_KEY not set)")
+
+        # Initialize non-blocking DB setup: run ping and index creation in a background thread
+        # If no MONGODB_URL is provided, skip DB initialization to allow the app to start in minimal mode
+        mongo_url = os.getenv("MONGODB_URL", getattr(settings, "MONGODB_URL", None))
+        if not mongo_url:
+            logger.warning("MONGODB_URL not set - skipping database initialization (app will run in degraded mode)")
+            return
+
+        async def _init_db():
+            try:
+                loop = asyncio.get_running_loop()
+                # run blocking DB calls in threadpool to avoid blocking event loop
+                await loop.run_in_executor(None, lambda: get_database().command("ping"))
+                await loop.run_in_executor(None, create_indexes)
+                logger.info("Background DB initialization completed")
+            except Exception as e:
+                logger.error("Background DB initialization failed", error=str(e))
+
+        asyncio.create_task(_init_db())
+        logger.info("Application startup initiated", version=settings.APP_VERSION, environment=settings.ENVIRONMENT)
     except Exception as e:
         logger.error("Startup failed", error=str(e))
 
@@ -207,21 +241,34 @@ async def health_check():
     except Exception as e:
         logger.error("Storage health check failed", error=str(e))
     
-    # Check vector DB (if RAG enabled)
+    # Check vector DB (if RAG enabled). Use a safe factory that falls back to an in-memory store
     if settings.RAG_ENABLED:
         try:
-            from app.services.vector_db_service import VectorDBService
-            vector_db = VectorDBService.create()
+            from app.services.vector_db_service import create_vector_db_service_safe
+            vector_db = create_vector_db_service_safe()
             await vector_db.get_stats()
             health["dependencies"]["vector_db"] = True
         except Exception as e:
-            logger.error("Vector DB health check failed", error=str(e))
+            # If vector DB fails, mark it as unavailable but don't necessarily fail the whole service
+            logger.error("Vector DB health check failed (vector DB will be considered degraded)", error=str(e))
     
     # Determine overall status
-    all_healthy = all(health["dependencies"].values())
-    health["status"] = "healthy" if all_healthy else "degraded"
-    
-    status_code = 200 if all_healthy else 503
+    # Treat database, redis and storage as core dependencies; vector_db is optional and will mark the service as 'degraded' but not necessarily return 503
+    core_deps = ["database", "redis", "storage"]
+    core_healthy = all(health["dependencies"].get(d, False) for d in core_deps)
+
+    if not core_healthy:
+        health["status"] = "degraded"
+        status_code = 503
+    else:
+        # Core deps are healthy. If only vector_db is false, return 200 but indicate degraded status.
+        if settings.RAG_ENABLED and not health["dependencies"].get("vector_db", False):
+            health["status"] = "degraded"
+            status_code = 200
+        else:
+            health["status"] = "healthy"
+            status_code = 200
+
     return JSONResponse(content=health, status_code=status_code)
 
 

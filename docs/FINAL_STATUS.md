@@ -5,12 +5,12 @@
 ### ✅ What's Working
 
 1. **MongoDB Atlas** ✅
-   - Connection: `mongodb+srv://Nine:2xGBEpr60Yde3M8m@ninecluster.ltpa6.mongodb.net/`
+   - Connection: `mongodb+srv://<user>:<password>@<cluster-url>/`
    - Database: `doc_intelligence`
    - Status: **CONNECTED** ✓
 
 2. **Redis Cloud** ✅
-   - Endpoint: `redis-14497.c325.us-east-1-4.ec2.cloud.redislabs.com:14497`
+   - Endpoint: `<redis-endpoint>:<port>`
    - Status: **CONFIGURED** (SSL connection may need adjustment)
 
 3. **Gemini LLM** ✅

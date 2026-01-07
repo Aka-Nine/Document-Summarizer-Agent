@@ -4,8 +4,8 @@
 
 All your credentials are ready! Here's what you have:
 
-1. ✅ **MongoDB Atlas**: `mongodb+srv://Nine:2xGBEpr60Yde3M8m@ninecluster.ltpa6.mongodb.net/`
-2. ✅ **Redis Cloud**: `redis-14497.c325.us-east-1-4.ec2.cloud.redislabs.com:14497`
+1. ✅ **MongoDB Atlas**: `<your-atlas-connection-string>`
+2. ✅ **Redis Cloud**: `<your-redis-endpoint>:<port>`
 3. ✅ **Groq API**: Ready to use
 4. ✅ **Gemini API**: Ready (alternative option)
 5. ✅ **LangChain**: Configured
@@ -113,21 +113,21 @@ Create a `.env` file with this content:
 # ============================================
 # SECURITY
 # ============================================
-SECRET_KEY=Dz9pciTZVR4p2GmtAUmVsuiOUMfxyccu3q0WvFf8-Qc
+SECRET_KEY=change_me_generate_a_new_secret
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # ============================================
 # MONGODB
 # ============================================
-MONGODB_URL=mongodb+srv://Nine:2xGBEpr60Yde3M8m@ninecluster.ltpa6.mongodb.net/?appName=NIneCluster
+MONGODB_URL=mongodb+srv://<user>:<password>@<cluster-url>/?appName=<app>
 MONGODB_DB_NAME=doc_intelligence
 
 # ============================================
 # REDIS CLOUD
 # ============================================
 REDIS_PROVIDER=redis_cloud
-REDIS_URL=rediss://:nPFMbSeVXccrygquELB6IbWWeNbSmltl@redis-14497.c325.us-east-1-4.ec2.cloud.redislabs.com:14497
+REDIS_URL=rediss://:<password>@<redis-endpoint>:<port>
 
 # ============================================
 # CLOUD STORAGE (CHOOSE ONE)
@@ -161,7 +161,7 @@ GROQ_MODEL=llama3-8b-8192
 # ============================================
 # LANGCHAIN
 # ============================================
-LANGCHAIN_API_KEY=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
+LANGCHAIN_API_KEY=<your_langchain_key>
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_PROJECT=Enterprise-Document-Intelligence
 

@@ -4,6 +4,7 @@ Production-ready RAG implementation with vector search and context retrieval
 """
 from typing import List, Dict, Any, Optional
 import structlog
+import asyncio
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document as LangchainDocument
 from app.services.embeddings_service import EmbeddingsService
@@ -29,10 +30,28 @@ class RAGProcessor:
         self._ensure_index_exists()
     
     def _ensure_index_exists(self):
-        """Ensure vector index exists"""
+        """Ensure vector index exists (called from sync context)"""
         try:
             dimension = self.embeddings_service.dimension
-            self.vector_db.create_index(dimension)
+            # create_index is async, so we need to run it in an event loop
+            # Try to get existing loop first
+            try:
+                loop = asyncio.get_running_loop()
+                # Loop is running, schedule as background task (fire and forget)
+                asyncio.create_task(self.vector_db.create_index(dimension))
+            except RuntimeError:
+                # No running loop, try to get event loop
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # Loop is running, schedule as task
+                        asyncio.create_task(self.vector_db.create_index(dimension))
+                    else:
+                        # Loop exists but not running, run it
+                        loop.run_until_complete(self.vector_db.create_index(dimension))
+                except RuntimeError:
+                    # No event loop at all, create new one
+                    asyncio.run(self.vector_db.create_index(dimension))
         except Exception as e:
             logger.warning("Index creation check failed", error=str(e))
     
@@ -124,18 +143,31 @@ class RAGProcessor:
                 filter_dict=filter_dict
             )
             
-            # Filter by similarity threshold
-            threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
+            # Use lower threshold or return all results if threshold is None
+            # This allows getting context even with lower similarity scores
+            threshold = similarity_threshold if similarity_threshold is not None else (settings.SIMILARITY_THRESHOLD * 0.5)  # Lower threshold by default
             filtered_results = [
                 r for r in results
                 if r.get("score", 0) >= threshold
             ]
             
+            # If no results with threshold, return top results anyway (even with low similarity)
+            # This allows the LLM to generate answers using whatever context is available
+            if not filtered_results and results:
+                filtered_results = results[:top_k]  # Return top K even if below threshold
+                logger.info(
+                    "Using low-similarity context",
+                    query=query[:100],
+                    results_count=len(filtered_results),
+                    min_score=min([r.get("score", 0) for r in filtered_results]) if filtered_results else 0
+                )
+            
             logger.info(
                 "Context retrieved",
                 query=query[:100],
                 results_count=len(filtered_results),
-                document_id=document_id
+                document_id=document_id,
+                threshold_used=threshold
             )
             
             return filtered_results

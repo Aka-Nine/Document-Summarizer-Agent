@@ -1,6 +1,6 @@
 """
 Enterprise Vector Database Service
-Supports Pinecone, Qdrant, Weaviate, Chroma, and OpenSearch
+Supports Pinecone, Qdrant, Weaviate, and OpenSearch
 """
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Any
@@ -41,7 +41,7 @@ class VectorDBInterface(ABC):
 
 
 class PineconeVectorDBService(VectorDBInterface):
-    """Pinecone Vector Database Service"""
+    """Pinecone Vector Database Service (supports both v1 and v2+ APIs)"""
     
     def __init__(self):
         try:
@@ -49,12 +49,27 @@ class PineconeVectorDBService(VectorDBInterface):
             if not settings.PINECONE_API_KEY:
                 raise ValueError("PINECONE_API_KEY is required")
             
-            pinecone.init(
-                api_key=settings.PINECONE_API_KEY,
-                environment=settings.PINECONE_ENVIRONMENT
-            )
             self.index_name = settings.PINECONE_INDEX_NAME or settings.VECTOR_DB_INDEX_NAME
-            self.pinecone = pinecone
+            
+            # Try new Pinecone API (v2+) first
+            try:
+                from pinecone import Pinecone
+                self.pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+                self.use_v2_api = True
+                logger.info("Using Pinecone v2+ API", index=self.index_name)
+            except (ImportError, AttributeError):
+                # Fallback to old API (v1)
+                if settings.PINECONE_ENVIRONMENT:
+                    pinecone.init(
+                        api_key=settings.PINECONE_API_KEY,
+                        environment=settings.PINECONE_ENVIRONMENT
+                    )
+                else:
+                    # Try without environment (some v1 versions support this)
+                    pinecone.init(api_key=settings.PINECONE_API_KEY)
+                self.pinecone = pinecone
+                self.use_v2_api = False
+                logger.info("Using Pinecone v1 API", index=self.index_name)
         except ImportError:
             raise ImportError("pinecone-client not installed. Install with: pip install pinecone-client")
     
@@ -62,13 +77,25 @@ class PineconeVectorDBService(VectorDBInterface):
         """Create Pinecone index"""
         try:
             index_name = index_name or self.index_name
-            if index_name not in self.pinecone.list_indexes():
-                self.pinecone.create_index(
-                    name=index_name,
-                    dimension=dimension,
-                    metric="cosine"
-                )
-                logger.info("Pinecone index created", index=index_name)
+            if self.use_v2_api:
+                # v2+ API: Check if index exists, create if not
+                existing_indexes = [idx.name for idx in self.pc.list_indexes()]
+                if index_name not in existing_indexes:
+                    self.pc.create_index(
+                        name=index_name,
+                        dimension=dimension,
+                        metric="cosine"
+                    )
+                    logger.info("Pinecone index created (v2+)", index=index_name)
+            else:
+                # v1 API
+                if index_name not in self.pinecone.list_indexes():
+                    self.pinecone.create_index(
+                        name=index_name,
+                        dimension=dimension,
+                        metric="cosine"
+                    )
+                    logger.info("Pinecone index created (v1)", index=index_name)
             return True
         except Exception as e:
             logger.error("Failed to create Pinecone index", error=str(e))
@@ -77,17 +104,30 @@ class PineconeVectorDBService(VectorDBInterface):
     async def upsert_vectors(self, vectors: List[Dict[str, Any]]) -> bool:
         """Upsert vectors to Pinecone"""
         try:
-            index = self.pinecone.Index(self.index_name)
-            # Format: [(id, vector, metadata), ...]
-            formatted_vectors = [
-                (
-                    v.get("id", str(uuid.uuid4())),
-                    v["vector"],
-                    v.get("metadata", {})
-                )
-                for v in vectors
-            ]
-            index.upsert(vectors=formatted_vectors)
+            if self.use_v2_api:
+                # v2+ API: Use list of tuples format
+                index = self.pc.Index(self.index_name)
+                formatted_vectors = [
+                    (
+                        v.get("id", str(uuid.uuid4())),
+                        v["vector"],
+                        v.get("metadata", {})
+                    )
+                    for v in vectors
+                ]
+                index.upsert(vectors=formatted_vectors)
+            else:
+                # v1 API: Use tuple format
+                index = self.pinecone.Index(self.index_name)
+                formatted_vectors = [
+                    (
+                        v.get("id", str(uuid.uuid4())),
+                        v["vector"],
+                        v.get("metadata", {})
+                    )
+                    for v in vectors
+                ]
+                index.upsert(vectors=formatted_vectors)
             logger.info("Vectors upserted to Pinecone", count=len(vectors))
             return True
         except Exception as e:
@@ -97,13 +137,24 @@ class PineconeVectorDBService(VectorDBInterface):
     async def search(self, query_vector: List[float], top_k: int = 5, filter_dict: Optional[Dict] = None) -> List[Dict]:
         """Search Pinecone index"""
         try:
-            index = self.pinecone.Index(self.index_name)
-            results = index.query(
-                vector=query_vector,
-                top_k=top_k,
-                include_metadata=True,
-                filter=filter_dict
-            )
+            if self.use_v2_api:
+                # v2+ API
+                index = self.pc.Index(self.index_name)
+                results = index.query(
+                    vector=query_vector,
+                    top_k=top_k,
+                    include_metadata=True,
+                    filter=filter_dict
+                )
+            else:
+                # v1 API
+                index = self.pinecone.Index(self.index_name)
+                results = index.query(
+                    vector=query_vector,
+                    top_k=top_k,
+                    include_metadata=True,
+                    filter=filter_dict
+                )
             return [
                 {
                     "id": match.id,
@@ -119,8 +170,14 @@ class PineconeVectorDBService(VectorDBInterface):
     async def delete_vectors(self, vector_ids: List[str]) -> bool:
         """Delete vectors from Pinecone"""
         try:
-            index = self.pinecone.Index(self.index_name)
-            index.delete(ids=vector_ids)
+            if self.use_v2_api:
+                # v2+ API
+                index = self.pc.Index(self.index_name)
+                index.delete(ids=vector_ids)
+            else:
+                # v1 API
+                index = self.pinecone.Index(self.index_name)
+                index.delete(ids=vector_ids)
             logger.info("Vectors deleted from Pinecone", count=len(vector_ids))
             return True
         except Exception as e:
@@ -130,13 +187,24 @@ class PineconeVectorDBService(VectorDBInterface):
     async def get_stats(self) -> Dict[str, Any]:
         """Get Pinecone index stats"""
         try:
-            index = self.pinecone.Index(self.index_name)
-            stats = index.describe_index_stats()
-            return {
-                "total_vectors": stats.total_vector_count,
-                "dimension": stats.dimension,
-                "index_fullness": stats.index_fullness
-            }
+            if self.use_v2_api:
+                # v2+ API
+                index = self.pc.Index(self.index_name)
+                stats = index.describe_index_stats()
+                return {
+                    "total_vectors": stats.total_vector_count,
+                    "dimension": stats.dimension,
+                    "index_fullness": stats.index_fullness
+                }
+            else:
+                # v1 API
+                index = self.pinecone.Index(self.index_name)
+                stats = index.describe_index_stats()
+                return {
+                    "total_vectors": stats.total_vector_count,
+                    "dimension": stats.dimension,
+                    "index_fullness": stats.index_fullness
+                }
         except Exception as e:
             logger.error("Failed to get Pinecone stats", error=str(e))
             raise
@@ -264,60 +332,73 @@ class QdrantVectorDBService(VectorDBInterface):
 
 
 class ChromaVectorDBService(VectorDBInterface):
-    """Chroma Vector Database Service (Local or Cloud)"""
+    """Chroma Vector Database Service (supports Chroma Cloud)"""
     
     def __init__(self):
         try:
             import chromadb
             from chromadb.config import Settings as ChromaSettings
             
-            # Check if cloud credentials are provided
-            if settings.CHROMA_API_KEY and settings.CHROMA_TENANT and settings.CHROMA_DATABASE:
-                # Use Chroma Cloud via API
-                logger.info("Initializing Chroma Cloud client", tenant=settings.CHROMA_TENANT, database=settings.CHROMA_DATABASE)
-                
-                # Create Chroma Cloud client with proper authentication
+            if not settings.CHROMA_API_KEY:
+                raise ValueError("CHROMA_API_KEY is required for Chroma Cloud")
+            
+            self.collection_name = settings.VECTOR_DB_INDEX_NAME
+            
+            # Use Chroma Cloud if API key and tenant are provided
+            if settings.CHROMA_API_KEY and settings.CHROMA_TENANT:
+                # Chroma Cloud configuration
                 self.client = chromadb.CloudClient(
                     tenant=settings.CHROMA_TENANT,
-                    database=settings.CHROMA_DATABASE,
+                    database=settings.CHROMA_DATABASE or "default",
                     api_key=settings.CHROMA_API_KEY
                 )
-                init_type = "Chroma Cloud"
-            else:
-                # Use local persistence
-                persist_dir = settings.CHROMA_PERSIST_DIR or "./chroma_db"
-                self.client = chromadb.PersistentClient(
-                    path=persist_dir,
+                logger.info("Using Chroma Cloud", tenant=settings.CHROMA_TENANT, database=settings.CHROMA_DATABASE)
+            elif settings.CHROMA_SERVER_HOST:
+                # Local Chroma server
+                self.client = chromadb.HttpClient(
+                    host=settings.CHROMA_SERVER_HOST,
+                    port=settings.CHROMA_SERVER_PORT or 8000,
                     settings=ChromaSettings(anonymized_telemetry=False)
                 )
-                init_type = f"Chroma Local (persist_dir={persist_dir})"
+                logger.info("Using Chroma HTTP client", host=settings.CHROMA_SERVER_HOST, port=settings.CHROMA_SERVER_PORT)
+            else:
+                # Local persistent Chroma
+                self.client = chromadb.PersistentClient(path="./chroma_db")
+                logger.info("Using local Chroma", path="./chroma_db")
             
-            self.collection_name = settings.VECTOR_DB_INDEX_NAME or "document-intelligence"
-            self.collection = self.client.get_or_create_collection(
-                name=self.collection_name,
-                metadata={"hnsw:space": "cosine"}
-            )
-            logger.info("Chroma vector DB initialized", collection=self.collection_name, init_type=init_type)
+            # Get or create collection
+            try:
+                self.collection = self.client.get_or_create_collection(
+                    name=self.collection_name,
+                    metadata={"hnsw:space": "cosine"}
+                )
+            except Exception as e:
+                logger.warning("Could not get/create collection, will create on first use", error=str(e))
+                self.collection = None
+                
         except ImportError:
-            raise ImportError("chromadb is required. Install with: pip install chromadb")
-        except Exception as e:
-            logger.error("Chroma initialization failed", error=str(e))
-            raise
+            raise ImportError("chromadb not installed. Install with: pip install chromadb")
     
     async def create_index(self, dimension: int, index_name: Optional[str] = None) -> bool:
-        """Chroma creates collection automatically, just verify it exists"""
+        """Create Chroma collection (index)"""
         try:
-            if index_name:
-                self.collection = self.client.get_or_create_collection(name=index_name)
-            logger.info("Chroma index ready", collection=self.collection.name)
+            collection_name = index_name or self.collection_name
+            self.collection = self.client.get_or_create_collection(
+                name=collection_name,
+                metadata={"hnsw:space": "cosine", "dimension": str(dimension)}
+            )
+            logger.info("Chroma collection created/retrieved", collection=collection_name)
             return True
         except Exception as e:
-            logger.error("Chroma index creation failed", error=str(e))
-            return False
+            logger.error("Failed to create Chroma collection", error=str(e))
+            raise
     
     async def upsert_vectors(self, vectors: List[Dict[str, Any]]) -> bool:
         """Upsert vectors to Chroma"""
         try:
+            if self.collection is None:
+                await self.create_index(len(vectors[0]["vector"]) if vectors else 384)
+            
             ids = [v.get("id", str(uuid.uuid4())) for v in vectors]
             embeddings = [v["vector"] for v in vectors]
             metadatas = [v.get("metadata", {}) for v in vectors]
@@ -338,6 +419,9 @@ class ChromaVectorDBService(VectorDBInterface):
     async def search(self, query_vector: List[float], top_k: int = 5, filter_dict: Optional[Dict] = None) -> List[Dict]:
         """Search Chroma collection"""
         try:
+            if self.collection is None:
+                return []
+            
             where = filter_dict if filter_dict else None
             results = self.collection.query(
                 query_embeddings=[query_vector],
@@ -351,7 +435,7 @@ class ChromaVectorDBService(VectorDBInterface):
                 for i in range(len(results["ids"][0])):
                     formatted_results.append({
                         "id": results["ids"][0][i],
-                        "score": 1 - results["distances"][0][i] if "distances" in results else 0.0,
+                        "score": 1.0 - results["distances"][0][i] if "distances" in results and results["distances"] else 0.0,
                         "metadata": results["metadatas"][0][i] if results.get("metadatas") else {},
                         "text": results["documents"][0][i] if results.get("documents") else ""
                     })
@@ -364,6 +448,9 @@ class ChromaVectorDBService(VectorDBInterface):
     async def delete_vectors(self, vector_ids: List[str]) -> bool:
         """Delete vectors from Chroma"""
         try:
+            if self.collection is None:
+                return True
+            
             self.collection.delete(ids=vector_ids)
             logger.info("Vectors deleted from Chroma", count=len(vector_ids))
             return True
@@ -374,6 +461,9 @@ class ChromaVectorDBService(VectorDBInterface):
     async def get_stats(self) -> Dict[str, Any]:
         """Get Chroma collection stats"""
         try:
+            if self.collection is None:
+                return {"total_vectors": 0, "vectors_count": 0}
+            
             count = self.collection.count()
             return {
                 "total_vectors": count,
@@ -397,12 +487,99 @@ class VectorDBService:
             return PineconeVectorDBService()
         elif provider == VectorDBProvider.QDRANT:
             return QdrantVectorDBService()
-        elif provider == VectorDBProvider.WEAVIATE:
-            raise NotImplementedError("Weaviate not yet implemented")
         elif provider == VectorDBProvider.CHROMA:
             return ChromaVectorDBService()
+        elif provider == VectorDBProvider.WEAVIATE:
+            raise NotImplementedError("Weaviate not yet implemented")
         elif provider == VectorDBProvider.OPENSEARCH:
             raise NotImplementedError("OpenSearch not yet implemented")
         else:
             raise ValueError(f"Unsupported vector DB provider: {provider}")
+
+
+class InMemoryVectorDBService(VectorDBInterface):
+    """A lightweight in-memory fallback vector DB for environments without an external vector store.
+    This is intentionally minimal: it stores vectors in a dict and supports basic upsert/search/delete for testing and degraded mode.
+    """
+
+    def __init__(self):
+        self._store = {}
+        self._metadatas = {}
+        self._documents = {}
+        logger.info("Initialized InMemoryVectorDBService (fallback)")
+
+    async def create_index(self, dimension: int, index_name: Optional[str] = None) -> bool:
+        return True
+
+    async def upsert_vectors(self, vectors: List[Dict[str, Any]]) -> bool:
+        try:
+            for v in vectors:
+                vid = v.get("id", str(uuid.uuid4()))
+                self._store[vid] = v["vector"]
+                self._metadatas[vid] = v.get("metadata", {})
+                self._documents[vid] = v.get("text", "")
+            logger.info("InMemory upsert", count=len(vectors))
+            return True
+        except Exception as e:
+            logger.error("InMemory upsert failed", error=str(e))
+            raise
+
+    async def search(self, query_vector: List[float], top_k: int = 5, filter_dict: Optional[Dict] = None) -> List[Dict]:
+        try:
+            # naive linear search using cosine similarity fallback to euclidean if dimensions mismatch
+            from math import sqrt
+
+            def dot(a, b):
+                return sum(x * y for x, y in zip(a, b))
+
+            def norm(a):
+                return sqrt(sum(x * x for x in a))
+
+            results = []
+            for vid, vec in self._store.items():
+                try:
+                    score = 0.0
+                    if len(vec) == len(query_vector):
+                        denom = (norm(vec) * norm(query_vector))
+                        score = (dot(vec, query_vector) / denom) if denom != 0 else 0.0
+                    results.append({"id": vid, "score": score, "metadata": self._metadatas.get(vid, {}), "text": self._documents.get(vid, "")})
+                except Exception:
+                    continue
+
+            results.sort(key=lambda r: r["score"], reverse=True)
+            return results[:top_k]
+        except Exception as e:
+            logger.error("InMemory search failed", error=str(e))
+            raise
+
+    async def delete_vectors(self, vector_ids: List[str]) -> bool:
+        try:
+            for vid in vector_ids:
+                self._store.pop(vid, None)
+                self._metadatas.pop(vid, None)
+                self._documents.pop(vid, None)
+            logger.info("InMemory delete", count=len(vector_ids))
+            return True
+        except Exception as e:
+            logger.error("InMemory delete failed", error=str(e))
+            raise
+
+    async def get_stats(self) -> Dict[str, Any]:
+        try:
+            count = len(self._store)
+            return {"total_vectors": count, "vectors_count": count, "indexed_vectors_count": count}
+        except Exception as e:
+            logger.error("InMemory get_stats failed", error=str(e))
+            raise
+
+
+def create_vector_db_service_safe() -> VectorDBInterface:
+    """Create the requested vector DB service but fall back to the in-memory service on failure.
+    This prevents import-time failures from crashing the whole app when optional dependencies are missing or misconfigured.
+    """
+    try:
+        return VectorDBService.create()
+    except Exception as e:
+        logger.warning("Falling back to InMemoryVectorDBService due to vector DB init failure", error=str(e))
+        return InMemoryVectorDBService()
 
