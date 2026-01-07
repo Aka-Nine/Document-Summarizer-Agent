@@ -17,7 +17,7 @@ Your model change has been applied correctly. The application is now using `gemi
 ### Environment Variables (`.env`)
 ```env
 LLM_PROVIDER=gemini
-GEMINI_API_KEY=AIzaSyDh9PE5TUbLvINt2UnafkKhUZN5zktL5Zc
+GEMINI_API_KEY=''
 GEMINI_MODEL=gemini-1.5-flash  ✅ Updated
 ```
 
