@@ -5,22 +5,9 @@ Production-ready document processing with retrieval augmented generation
 import time
 from typing import List, Dict, Any, Optional
 from langchain_groq import ChatGroq
-
-# Optional LLM provider imports - only import if needed
-try:
-    from langchain_openai import ChatOpenAI
-except ImportError:
-    ChatOpenAI = None
-
-try:
-    from langchain_anthropic import ChatAnthropic
-except ImportError:
-    ChatAnthropic = None
-
-try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
-except ImportError:
-    ChatGoogleGenerativeAI = None
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+from langchain_google_genai import ChatGoogleGenerativeAI
 # LangChain chains - using direct LLM calls instead
 # from langchain.chains.summarize import load_summarize_chain
 # from langchain.chains.question_answering import load_qa_chain
@@ -58,8 +45,6 @@ class EnterpriseDocumentProcessor:
                 max_retries=3
             )
         elif provider == "openai":
-            if ChatOpenAI is None:
-                raise ValueError("langchain-openai is not installed. Install it with: pip install langchain-openai")
             if not settings.OPENAI_API_KEY:
                 raise ValueError("OPENAI_API_KEY is required")
             return ChatOpenAI(
@@ -69,8 +54,6 @@ class EnterpriseDocumentProcessor:
                 max_retries=3
             )
         elif provider == "anthropic":
-            if ChatAnthropic is None:
-                raise ValueError("langchain-anthropic is not installed. Install it with: pip install langchain-anthropic")
             if not settings.ANTHROPIC_API_KEY:
                 raise ValueError("ANTHROPIC_API_KEY is required")
             return ChatAnthropic(
@@ -80,29 +63,57 @@ class EnterpriseDocumentProcessor:
                 max_retries=3
             )
         elif provider == "gemini":
-            if ChatGoogleGenerativeAI is None:
-                raise ValueError("langchain-google-genai is not installed. Install it with: pip install langchain-google-genai")
             if not settings.GEMINI_API_KEY:
                 raise ValueError("GEMINI_API_KEY is required")
-            return ChatGoogleGenerativeAI(
-                google_api_key=settings.GEMINI_API_KEY,
-                model=settings.GEMINI_MODEL,
-                temperature=0.0,
-                max_retries=3
-            )
+            
+            model_name = settings.GEMINI_MODEL
+            
+            # Handle model name variations for compatibility
+            # For 1.5 models, try different name formats if needed
+            if "1.5" in model_name:
+                # Try with -001 suffix (common format for 1.5 models)
+                if not model_name.endswith("-001") and not model_name.endswith("-latest"):
+                    # First try the original name, will fall back if needed
+                    pass
+            
+            try:
+                return ChatGoogleGenerativeAI(
+                    google_api_key=settings.GEMINI_API_KEY,
+                    model=model_name,
+                    temperature=0.0,
+                    max_retries=3
+                )
+            except Exception as e:
+                # If model name fails, try alternative formats
+                if "1.5" in model_name:
+                    # Try with -001 suffix
+                    alt_model = f"{model_name}-001" if not model_name.endswith("-001") else model_name
+                    logger.warning(f"Trying alternative model name: {alt_model}", original=model_name, error=str(e))
+                    return ChatGoogleGenerativeAI(
+                        google_api_key=settings.GEMINI_API_KEY,
+                        model=alt_model,
+                        temperature=0.0,
+                        max_retries=3
+                    )
+                raise
         else:
             raise ValueError(f"Unsupported LLM provider: {provider}")
     
     def _create_qa_prompt(self) -> PromptTemplate:
         """Create QA prompt template"""
-        template = """You are an expert document analyst. Answer the question based on the provided context.
+        template = """You are an intelligent AI assistant helping users understand documents. Answer the question using the provided document context when available, and supplement with your general knowledge when appropriate.
 
-Context:
+Document Context:
 {context}
 
 Question: {question}
 
-Answer the question accurately and concisely. If the answer cannot be found in the context, say "I don't have enough information to answer this question."
+Instructions:
+- If the document context is relevant, use it as the primary source for your answer
+- If the document context is limited or doesn't directly address the question, you may use your general knowledge to provide a helpful answer
+- Always be clear about what information comes from the document vs. general knowledge
+- Provide a comprehensive, helpful answer even if the document context is limited
+- Be conversational and natural in your response
 
 Answer:"""
         return PromptTemplate(
@@ -120,6 +131,18 @@ Answer:"""
             elif file_ext == "txt":
                 loader = TextLoader(file_path)
             elif file_ext in ["docx", "doc"]:
+                # Check if docx2txt is available
+                try:
+                    import docx2txt
+                except ImportError:
+                    logger.error(
+                        "docx2txt module not found. Install it with: pip install docx2txt",
+                        file_path=file_path
+                    )
+                    raise ImportError(
+                        "docx2txt module is required for .docx files. "
+                        "Install it with: pip install docx2txt"
+                    )
                 loader = Docx2txtLoader(file_path)
             else:
                 raise ValueError(f"Unsupported file type: {file_ext}")
@@ -234,11 +257,9 @@ Answer:"""
             full_text = "\n\n".join([doc.page_content for doc in documents])
             
             # Create summary prompt
-            # Limit text length to avoid token limits
-            text_to_summarize = full_text[:10000] if len(full_text) > 10000 else full_text
             summary_prompt = f"""Please provide a comprehensive summary of the following document:
 
-{text_to_summarize}
+{full_text}
 
 Summary:"""
             
@@ -279,12 +300,17 @@ Summary:"""
                             for result in context_results
                         ])
                         
-                        # Use LLM directly with prompt (no chain needed)
-                        prompt_text = self.qa_prompt.format(context=context_text, question=question)
-                        from langchain_core.messages import HumanMessage
-                        messages = [HumanMessage(content=prompt_text)]
-                        response = await self.llm.ainvoke(messages)
-                        answer = response.content if hasattr(response, 'content') else str(response)
+                        # Use QA chain with retrieved context
+                        qa_chain = load_qa_chain(
+                            self.llm,
+                            chain_type="stuff",
+                            prompt=self.qa_prompt
+                        )
+                        context_doc = LangchainDocument(page_content=context_text)
+                        answer = qa_chain.run(
+                            input_documents=[context_doc],
+                            question=question
+                        )
                     else:
                         # Fallback to summary if no context found
                         answer = await self._answer_from_summary(question, chunks)
@@ -328,7 +354,7 @@ Summary:"""
         document_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Query a specific document using RAG
+        Query a specific document using RAG with intelligent fallback
         
         Args:
             query: Query string
@@ -345,25 +371,47 @@ Summary:"""
             raise ValueError("Document ID is required")
         
         try:
-            # Retrieve relevant context
+            # Retrieve relevant context (with lower threshold to get more results)
             context_results = await self.rag_processor.retrieve_context(
                 query=query,
                 document_id=doc_id,
-                top_k=settings.TOP_K_RETRIEVAL
+                top_k=settings.TOP_K_RETRIEVAL,
+                similarity_threshold=None  # Don't filter by threshold - get all top results
             )
             
-            if not context_results:
-                return {
-                    "answer": "No relevant context found for this query.",
-                    "context": [],
-                    "sources": []
-                }
+            # Get document summary as additional context
+            document_summary = None
+            try:
+                from app.models.mongodb_database import get_documents_collection
+                from bson import ObjectId
+                documents_collection = get_documents_collection()
+                doc_obj = documents_collection.find_one({"_id": ObjectId(doc_id)})
+                if doc_obj:
+                    document_summary = doc_obj.get("summary")
+            except Exception as e:
+                logger.warning("Could not retrieve document summary", error=str(e))
             
             # Build context for LLM
-            context_text = "\n\n".join([
-                result["metadata"].get("text", "")
-                for result in context_results
-            ])
+            context_parts = []
+            
+            # Add retrieved chunks
+            if context_results:
+                context_parts.append("Relevant document excerpts:")
+                context_parts.append("\n\n".join([
+                    f"- {result['metadata'].get('text', '')}"
+                    for result in context_results[:5]  # Limit to top 5 chunks
+                ]))
+            
+            # Add document summary as fallback context
+            if document_summary:
+                context_parts.append(f"\n\nDocument Summary:\n{document_summary}")
+            
+            # If we have some context, use it; otherwise use minimal context
+            if context_parts:
+                context_text = "\n".join(context_parts)
+            else:
+                # Even with no context, let the LLM try to answer using its knowledge
+                context_text = "No specific document excerpts found, but you may use your general knowledge to help answer the question."
             
             # Generate answer using LLM directly
             prompt_text = self.qa_prompt.format(context=context_text, question=query)
@@ -374,15 +422,15 @@ Summary:"""
             
             return {
                 "answer": answer,
-                "context": context_results,
+                "context": context_results if context_results else [],
                 "sources": [
                     {
                         "chunk_id": r["id"],
                         "score": r["score"],
                         "text": r["metadata"].get("text", "")[:200]
                     }
-                    for r in context_results
-                ]
+                    for r in context_results[:5]  # Limit to top 5
+                ] if context_results else []
             }
             
         except Exception as e:

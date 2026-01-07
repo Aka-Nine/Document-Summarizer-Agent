@@ -1,87 +1,192 @@
-# Document Intelligence Platform - Test Frontend
+# Document Intelligence Platform - Next.js Frontend
 
-A simple, modern frontend for testing the Document Intelligence Platform API.
+A production-ready Next.js 14 frontend with App Router, TypeScript, and Tailwind CSS for the Document Intelligence Platform.
 
-## Features
+## 🚀 Features
 
-- ✅ User Registration & Login
-- ✅ Document Upload (PDF, DOCX, TXT)
-- ✅ Document List with Status
-- ✅ RAG-based Document Querying
-- ✅ Real-time Status Updates
-- ✅ Beautiful, Responsive UI
+- ⚡ **Next.js 14** with App Router for optimal performance
+- 🎨 **Beautiful UI** with Tailwind CSS and Framer Motion animations
+- 📱 **Fully Responsive** design for all devices
+- 🔐 **Authentication** with JWT token management
+- 📄 **Document Management** - Upload, view, and manage documents
+- 🤖 **AI Query Interface** - Chat-like RAG-based document querying
+- 🎯 **Production Ready** - Optimized builds, SEO, and performance
+- 🔒 **Type Safe** - Full TypeScript support
 
-## Quick Start
+## 🛠️ Tech Stack
 
-### Option 1: Open Directly in Browser
+- **Next.js 14** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first CSS framework
+- **Framer Motion** - Animation library
+- **Axios** - HTTP client
+- **Lucide React** - Icon library
 
-1. Make sure the backend is running:
-   ```bash
-   python run.py
-   ```
-
-2. Open `index.html` in your browser:
-   - Double-click `index.html`, or
-   - Right-click → Open with → Your browser
-
-3. The frontend will connect to `http://localhost:8000`
-
-### Option 2: Serve with Python HTTP Server
+## 📦 Installation
 
 ```bash
-cd frontend
-python -m http.server 8080
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.local.example .env.local
+
+# Edit .env.local and set your API URL
+NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1
 ```
 
-Then open: http://localhost:8080
+## 🏃 Development
 
-### Option 3: Serve with FastAPI (Recommended)
+```bash
+# Start development server
+npm run dev
 
-The backend can serve static files. Add this to your FastAPI app:
+# Build for production
+npm run build
 
-```python
-from fastapi.staticfiles import StaticFiles
+# Start production server
+npm start
 
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+# Run linting
+npm run lint
 ```
 
-Then access at: http://localhost:8000/static/index.html
+The application will be available at `http://localhost:3000`
 
-## Usage
+## 📁 Project Structure
 
-1. **Register/Login**: Create an account or login with existing credentials
-2. **Upload Document**: Select a PDF, DOCX, or TXT file and upload
-3. **View Documents**: See all your uploaded documents with their processing status
-4. **Query Documents**: Ask questions about processed documents using RAG
-
-## API Endpoints Used
-
-- `POST /api/v1/register` - User registration
-- `POST /api/v1/login` - User login
-- `POST /api/v1/documents/upload` - Upload document
-- `GET /api/v1/documents` - List documents
-- `GET /api/v1/documents/{id}` - Get document details
-- `POST /api/v1/documents/{id}/query` - Query document with RAG
-
-## Configuration
-
-To change the API URL, edit the `API_BASE` constant in `index.html`:
-
-```javascript
-const API_BASE = 'http://localhost:8000/api/v1';
+```
+frontend/
+├── app/                    # Next.js App Router
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Landing page
+│   ├── dashboard/         # Dashboard pages
+│   └── globals.css        # Global styles
+├── components/            # React components
+│   ├── LandingPage.tsx
+│   ├── AuthModal.tsx
+│   ├── Dashboard.tsx
+│   ├── DocumentUpload.tsx
+│   ├── DocumentList.tsx
+│   └── DocumentQuery.tsx
+├── context/               # React contexts
+│   └── AuthContext.tsx
+├── next.config.js         # Next.js configuration
+├── tailwind.config.js     # Tailwind configuration
+└── tsconfig.json          # TypeScript configuration
 ```
 
-## Browser Compatibility
+## 🎨 Features Overview
 
-- Chrome/Edge (Recommended)
-- Firefox
-- Safari
-- Opera
+### Landing Page
+- Animated hero section with gradient backgrounds
+- Feature showcase with icons
+- Smooth scroll animations
+- Call-to-action buttons
+- Responsive design
 
-## Notes
+### Authentication
+- Modal-based login/register
+- Form validation
+- Error handling
+- Auto-login after registration
+- JWT token management
 
-- Make sure CORS is enabled in your backend (already configured)
-- The frontend stores the auth token in localStorage
-- Documents must be processed (status: "completed") before querying
-- RAG must be enabled for document querying to work
+### Document Upload
+- Drag-and-drop interface
+- File type validation
+- File size checking
+- Optional question input
+- Upload progress feedback
 
+### Document List
+- Real-time status updates
+- Document cards with metadata
+- Status badges
+- Auto-refresh every 5 seconds
+- Quick navigation to query
+
+### Document Query
+- Chat-like interface
+- Document selection
+- Real-time AI responses
+- Source citations
+- Response time display
+- Chat history
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create `.env.local` file:
+
+```env
+NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1
+```
+
+### API Integration
+
+The frontend integrates with the following API endpoints:
+
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/documents/upload` - Upload document
+- `GET /api/v1/auth/documents` - List documents
+- `GET /api/v1/auth/documents/{id}` - Get document details
+- `POST /api/v1/auth/documents/{id}/query` - Query document
+
+## 🚀 Production Deployment
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+### Deploy to Vercel
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Deploy to Other Platforms
+
+Next.js can be deployed to:
+- Vercel (recommended)
+- Netlify
+- AWS Amplify
+- Docker
+- Any Node.js hosting
+
+## 📊 Performance Optimizations
+
+- ✅ Server-side rendering (SSR)
+- ✅ Static site generation (SSG) where applicable
+- ✅ Image optimization
+- ✅ Code splitting
+- ✅ Font optimization
+- ✅ Compression enabled
+- ✅ SWC minification
+
+## 🔒 Security
+
+- ✅ Environment variable protection
+- ✅ XSS protection
+- ✅ CSRF protection
+- ✅ Secure headers
+- ✅ JWT token storage in localStorage
+
+## 📱 Browser Support
+
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (latest)
+- Opera (latest)
+
+## 📝 License
+
+Part of the Document Intelligence Platform project.

@@ -17,6 +17,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 
 from app.config.settings import settings
+from app.core.rate_limit import limiter
 
 from app.models.mongodb_database import (
     get_users_collection, get_documents_collection, get_queries_collection,
@@ -100,7 +101,8 @@ class DocumentQueryRequest(BaseModel):
 
 # Authentication endpoints
 @router.post("/register")
-async def register(user: UserCreate):
+@limiter.limit(lambda: f"{settings.RATE_LIMIT_PER_MINUTE}/minute")
+async def register(request: Request, user: UserCreate):
     """Register a new user"""
     try:
         users_collection = get_users_collection()
@@ -127,7 +129,8 @@ async def register(user: UserCreate):
 
 
 @router.post("/login")
-async def login(user: UserLogin):
+@limiter.limit(lambda: f"{settings.RATE_LIMIT_PER_MINUTE}/minute")
+async def login(request: Request, user: UserLogin):
     """Login and get JWT token"""
     try:
         users_collection = get_users_collection()
@@ -158,6 +161,7 @@ async def login(user: UserLogin):
 
 # Document endpoints
 @router.post("/documents/upload")
+@limiter.limit(lambda: f"{settings.RATE_LIMIT_UPLOAD_PER_MINUTE}/minute")
 async def upload_document(
     request: Request,
     file: UploadFile = File(...),
@@ -250,7 +254,9 @@ async def upload_document(
 
 
 @router.get("/documents")
+@limiter.limit(lambda: f"{settings.RATE_LIMIT_PER_MINUTE}/minute")
 async def list_documents(
+    request: Request,
     current_user: dict = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100
@@ -271,11 +277,14 @@ async def list_documents(
                 "status": doc.get("status"),
                 "file_type": doc.get("file_type"),
                 "file_size": doc.get("file_size"),
+                "summary": doc.get("summary"),  # Added for frontend display
                 "rag_enabled": doc.get("rag_enabled", True),
                 "chunks_indexed": doc.get("chunks_indexed", 0),
+                "vector_db_indexed": doc.get("vector_db_indexed", False),  # Added for frontend filtering
                 "created_at": doc.get("created_at").isoformat() if doc.get("created_at") else None,
                 "processed_at": doc.get("processed_at").isoformat() if doc.get("processed_at") else None,
-                "processing_time": doc.get("processing_time")
+                "processing_time": doc.get("processing_time"),
+                "updated_at": doc.get("updated_at").isoformat() if doc.get("updated_at") else None
             }
             for doc in documents
         ]
@@ -285,7 +294,9 @@ async def list_documents(
 
 
 @router.get("/documents/{document_id}")
+@limiter.limit(lambda: f"{settings.RATE_LIMIT_PER_MINUTE}/minute")
 async def get_document(
+    request: Request,
     document_id: str,
     current_user: dict = Depends(get_current_user)
 ):
@@ -332,7 +343,9 @@ async def get_document(
 
 
 @router.post("/documents/{document_id}/query")
+@limiter.limit(lambda : f"{settings.RATE_LIMIT_PER_MINUTE}/minute")
 async def query_document(
+    request: Request,
     document_id: str,
     query_request: DocumentQueryRequest,
     current_user: dict = Depends(get_current_user)

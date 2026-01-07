@@ -33,8 +33,11 @@ def get_celery_redis_url():
     # Check if using Redis Cloud
     if getattr(settings, "REDIS_PROVIDER", "redis").lower() == "redis_cloud":
         if settings.REDIS_CLOUD_ENDPOINT and settings.REDIS_CLOUD_PASSWORD:
+            # Use redis:// (not rediss://) as Redis Cloud doesn't require SSL for this setup
+            # Format: redis://username:password@host:port
+            username = settings.REDIS_CLOUD_USERNAME or "default"
             return (
-                f"rediss://:{settings.REDIS_CLOUD_PASSWORD}@"
+                f"redis://{username}:{settings.REDIS_CLOUD_PASSWORD}@"
                 f"{settings.REDIS_CLOUD_ENDPOINT}:{settings.REDIS_CLOUD_PORT}"
             )
     
@@ -42,18 +45,42 @@ def get_celery_redis_url():
     if settings.REDIS_URL:
         return settings.REDIS_URL
     
+    # In production we require a real broker; in dev allow caller to fall back
+    if settings.ENVIRONMENT.lower() == "production":
+        raise ValueError("Redis configuration required in production. Set REDIS_URL or Redis Cloud settings")
+    
     raise ValueError("Redis configuration required. Set REDIS_URL or Redis Cloud settings")
 
 # Initialize Celery with production settings
-celery_redis_url = get_celery_redis_url()
+# Avoid raising at import time when Redis isn't configured (development machines)
+try:
+    celery_redis_url = get_celery_redis_url()
+except Exception as e:
+    logger.warning("Redis not configured for Celery at import time; using in-memory broker (dev only)", error=str(e))
+    celery_redis_url = "memory://"
+
+# Use cache+memory as backend when using memory broker to avoid None backend
+if celery_redis_url == "memory://":
+    celery_backend = "cache+memory://"
+else:
+    celery_backend = celery_redis_url
 
 celery_app = Celery(
     "enterprise_document_processor",
     broker=celery_redis_url,
-    backend=celery_redis_url
+    backend=celery_backend
 )
 
+# Backwards-compatible alias expected by some test and tooling code
+app = celery_app
+
 # Celery configuration
+import sys
+
+# Windows compatibility: use solo pool to avoid multiprocessing issues
+# On Windows, multiprocessing with 'spawn' causes permission errors
+worker_pool = 'solo' if sys.platform == 'win32' else 'prefork'
+
 celery_app.conf.update(
     task_serializer=settings.CELERY_TASK_SERIALIZER,
     result_serializer=settings.CELERY_RESULT_SERIALIZER,
@@ -65,6 +92,12 @@ celery_app.conf.update(
     task_soft_time_limit=settings.CELERY_TASK_SOFT_TIME_LIMIT,
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=1000,
+    # Windows compatibility
+    worker_pool=worker_pool,
+    # Explicitly include tasks to ensure they're registered
+    include=['app.tasks.celery_tasks'],
+    # Auto-discover tasks in this module
+    autodiscover_tasks=False,  # We're defining tasks explicitly
 )
 
 
@@ -77,8 +110,22 @@ def process_document_task(self, document_id: str, questions: Optional[List[str]]
         document_id: MongoDB document ID (string)
         questions: Optional list of questions to answer
     """
+    # Initialize LangSmith tracing in Celery worker process
+    # This is needed because Celery workers run in separate processes
+    if settings.LANGCHAIN_TRACING_V2 and settings.LANGCHAIN_API_KEY:
+        import os
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
+        os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
+        if settings.LANGCHAIN_ENDPOINT:
+            os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
+        logger.info("LangSmith tracing enabled in Celery worker", project=settings.LANGCHAIN_PROJECT)
+    
     from bson import ObjectId
     temp_file_path = None
+    documents_collection = None
+    doc_id_obj = None
+    doc = None
     
     try:
         documents_collection = get_documents_collection()
@@ -129,10 +176,11 @@ def process_document_task(self, document_id: str, questions: Optional[List[str]]
             processor = EnterpriseDocumentProcessor(document_id=document_id)
             
             # Prepare metadata
+            # MongoDB documents are dicts, use dictionary access
             metadata = {
-                "filename": doc.filename,
-                "file_type": doc.file_type,
-                "user_id": doc.user_id,
+                "filename": doc.get("filename", ""),
+                "file_type": doc.get("file_type", ""),
+                "user_id": doc.get("user_id", ""),
                 "document_id": document_id
             }
             
@@ -209,7 +257,8 @@ def process_document_task(self, document_id: str, questions: Optional[List[str]]
         
     except Exception as e:
         logger.exception("Unhandled exception in Celery task", error=str(e), document_id=document_id)
-        if 'doc_id_obj' in locals():
+        # Only update document status if we have both the collection and document ID
+        if documents_collection is not None and doc_id_obj is not None:
             try:
                 documents_collection.update_one(
                     {"_id": doc_id_obj},
@@ -220,8 +269,8 @@ def process_document_task(self, document_id: str, questions: Optional[List[str]]
                         "updated_at": datetime.utcnow()
                     }}
                 )
-            except:
-                pass
+            except Exception as update_error:
+                logger.warning("Failed to update document status on error", error=str(update_error))
         raise
     
     finally:
@@ -250,6 +299,15 @@ def query_document_task(
     Returns:
         Query results with answer and context
     """
+    # Initialize LangSmith tracing in Celery worker process
+    if settings.LANGCHAIN_TRACING_V2 and settings.LANGCHAIN_API_KEY:
+        import os
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
+        os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
+        if settings.LANGCHAIN_ENDPOINT:
+            os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
+    
     from bson import ObjectId
     start_time = datetime.utcnow()
     

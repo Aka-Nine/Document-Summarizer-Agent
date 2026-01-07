@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from typing import Optional
 import structlog
@@ -31,7 +31,7 @@ from app.middleware.production import setup_production_middleware
 logger = structlog.get_logger()
 
 # Rate limiter setup
-limiter = Limiter(key_func=get_remote_address)
+from app.core.rate_limit import limiter
 
 # Create FastAPI app
 app = FastAPI(
@@ -45,6 +45,9 @@ app = FastAPI(
 
 # Setup production middleware
 setup_production_middleware(app)
+
+# Rate limit middleware (must be added after request ID/logging middlewares)
+app.add_middleware(SlowAPIMiddleware)
 
 # Rate limiting
 app.state.limiter = limiter
@@ -84,10 +87,25 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 async def startup_event():
     """Initialize application on startup"""
     try:
-        # Initialize non-blocking DB setup: run ping and index creation in a background thread
         import asyncio
         import os
+        
+        # Initialize LangSmith tracing if enabled
+        if settings.LANGCHAIN_TRACING_V2 and settings.LANGCHAIN_API_KEY:
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
+            os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
+            if settings.LANGCHAIN_ENDPOINT:
+                os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
+            logger.info(
+                "LangSmith tracing enabled",
+                project=settings.LANGCHAIN_PROJECT,
+                endpoint=settings.LANGCHAIN_ENDPOINT or "default"
+            )
+        else:
+            logger.info("LangSmith tracing disabled (LANGCHAIN_TRACING_V2=false or LANGCHAIN_API_KEY not set)")
 
+        # Initialize non-blocking DB setup: run ping and index creation in a background thread
         # If no MONGODB_URL is provided, skip DB initialization to allow the app to start in minimal mode
         mongo_url = os.getenv("MONGODB_URL", getattr(settings, "MONGODB_URL", None))
         if not mongo_url:

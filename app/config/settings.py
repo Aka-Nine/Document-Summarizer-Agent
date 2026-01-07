@@ -21,8 +21,8 @@ class VectorDBProvider(str, Enum):
     PINECONE = "pinecone"
     QDRANT = "qdrant"
     WEAVIATE = "weaviate"
-    CHROMA = "chroma"
     OPENSEARCH = "opensearch"
+    CHROMA = "chroma"
 
 
 class EmbeddingProvider(str, Enum):
@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "2.0.0"
     API_V1_PREFIX: str = "/api/v1"
     DEBUG: bool = False
-    ENVIRONMENT: str = "production"  # production, staging, development
+    ENVIRONMENT: str = "development"  # production, staging, development
     
     # Security
     SECRET_KEY: str
@@ -56,7 +56,8 @@ class Settings(BaseSettings):
     TRUSTED_PROXIES: List[str] = ["127.0.0.1", "localhost"]
     
     # File Upload
-    MAX_FILE_SIZE: int = 50 * 1024 * 1024  # 50MB default
+    # Lower by default to stay within free-tier limits; can be raised in env
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB default
     ALLOWED_EXTENSIONS: List[str] = [".pdf", ".docx", ".txt", ".md"]
     ALLOWED_MIME_TYPES: List[str] = [
         "application/pdf",
@@ -97,7 +98,8 @@ class Settings(BaseSettings):
     FILESYSTEM_BASE_URL: str = "http://localhost:8000/files"  # Base URL for file access
     
     # MongoDB Configuration
-    MONGODB_URL: str = "mongodb+srv://Nine:2xGBEpr60Yde3M8m@ninecluster.ltpa6.mongodb.net/?appName=NIneCluster"  # MongoDB connection string
+    # MongoDB connection string (must be provided via environment)
+    MONGODB_URL: Optional[str] = None
     MONGODB_DB_NAME: str = "doc_intelligence"  # Database name
     
     # Database Connection Pooling (for MongoDB)
@@ -124,12 +126,12 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
     
     # Vector Database Configuration
-    VECTOR_DB_PROVIDER: VectorDBProvider = VectorDBProvider.CHROMA
+    VECTOR_DB_PROVIDER: VectorDBProvider = VectorDBProvider.PINECONE
     VECTOR_DB_INDEX_NAME: str = "document-intelligence"
     
     # Pinecone
     PINECONE_API_KEY: Optional[str] = None
-    PINECONE_ENVIRONMENT: Optional[str] = None
+    PINECONE_ENVIRONMENT: Optional[str] = None  # Deprecated in newer Pinecone versions, but kept for backward compatibility
     PINECONE_INDEX_NAME: Optional[str] = None
     
     # Qdrant
@@ -142,18 +144,17 @@ class Settings(BaseSettings):
     WEAVIATE_API_KEY: Optional[str] = None
     WEAVIATE_CLASS_NAME: Optional[str] = None
     
-    # Chroma
-    CHROMA_PERSIST_DIR: Optional[str] = "./chroma_db"
-    CHROMA_API_KEY: Optional[str] = None
-    CHROMA_TENANT: Optional[str] = None
-    CHROMA_DATABASE: Optional[str] = None
-    CHROMA_SERVER_HOST: Optional[str] = None  # For Chroma Cloud endpoint
-    CHROMA_SERVER_PORT: int = 8000
-    
     # OpenSearch
     OPENSEARCH_URL: Optional[str] = None
     OPENSEARCH_USERNAME: Optional[str] = None
     OPENSEARCH_PASSWORD: Optional[str] = None
+    
+    # Chroma
+    CHROMA_API_KEY: Optional[str] = None
+    CHROMA_TENANT: Optional[str] = None
+    CHROMA_DATABASE: Optional[str] = None
+    CHROMA_SERVER_HOST: Optional[str] = None
+    CHROMA_SERVER_PORT: Optional[int] = None
     
     # Embeddings Configuration
     EMBEDDING_PROVIDER: EmbeddingProvider = EmbeddingProvider.OPENAI
@@ -213,8 +214,10 @@ class Settings(BaseSettings):
     
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True
-    RATE_LIMIT_PER_MINUTE: int = 60
-    RATE_LIMIT_UPLOAD_PER_MINUTE: int = 5
+    # Conservative defaults for free tier
+    RATE_LIMIT_PER_MINUTE: int = 20
+    RATE_LIMIT_UPLOAD_PER_MINUTE: int = 2
+    RATE_LIMIT_STORAGE_URI: Optional[str] = None  # e.g., redis://:password@host:port/0
     
     # Celery Configuration
     CELERY_BROKER_URL: Optional[str] = None  # Override REDIS_URL if needed
