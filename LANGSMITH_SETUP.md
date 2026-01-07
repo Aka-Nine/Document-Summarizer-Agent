@@ -15,7 +15,7 @@ LangSmith tracing has been successfully enabled for your application. All LangCh
 
 ### Environment Variables (`.env`)
 ```env
-LANGCHAIN_API_KEY=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
+LANGCHAIN_API_KEY=
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_PROJECT=Enterprise-Document-Intelligence
 ```
