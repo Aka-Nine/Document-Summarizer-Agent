@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
-import { X, Mail, Lock, User, AlertCircle, Loader } from 'lucide-react'
+import { X, Mail, Lock, User, AlertCircle, Loader, Sparkles } from 'lucide-react'
 
 interface AuthModalProps {
   mode: 'login' | 'register'

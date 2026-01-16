@@ -1,551 +1,537 @@
 'use client'
 
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { useRouter } from 'next/navigation'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { 
   FileText, 
-  Brain, 
-  Zap, 
-  Shield, 
-  Search, 
   Sparkles,
-  ArrowRight,
-  CheckCircle,
-  BarChart3,
-  Lock,
-  GitBranch,
-  Cloud,
-  Database,
-  Sparkle,
-  Play,
+  Zap,
+  Shield,
   Code,
-  TestTube,
-  Rocket,
-  ChevronDown,
+  ArrowRight,
   Menu,
-  X
+  X,
+  CheckCircle2,
+  Cloud,
+  Lock,
+  Workflow,
+  Search,
+  Brain,
+  Database,
+  Globe,
 } from 'lucide-react'
 import AuthModal from './AuthModal'
 
 export default function LandingPage() {
-  const router = useRouter()
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const heroRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start']
-  })
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const y = useTransform(scrollYProgress, [0, 0.5], [0, -100])
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('register')
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [activeFilter, setActiveFilter] = useState('ALL')
 
-  const handleGetStarted = () => {
+  const openSignup = () => {
     setAuthMode('register')
     setShowAuthModal(true)
   }
 
-  const handleTryNow = () => {
+  const openSignin = () => {
     setAuthMode('login')
     setShowAuthModal(true)
   }
 
-  return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-sm border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center space-x-2"
-            >
-              <span className="text-xl font-semibold tracking-tight">DocIntelligence</span>
-            </motion.div>
-            
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <button className="text-sm text-gray-400 hover:text-white transition-colors">AI Platform</button>
-              <button className="text-sm text-gray-400 hover:text-white transition-colors">Infrastructure</button>
-              <button className="text-sm text-gray-400 hover:text-white transition-colors">Research</button>
-              <button className="text-sm text-gray-400 hover:text-white transition-colors">Company</button>
-              <button
-                onClick={handleTryNow}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                Sign In
-              </button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleGetStarted}
-                className="px-4 py-2 bg-white text-black text-sm font-medium rounded hover:bg-gray-100 transition-colors"
-              >
-                Sign Up
-              </motion.button>
-            </div>
+  const filters = ['ALL', 'DOCUMENTS', 'SUMMARIES', 'API', 'FEATURES', 'USE CASES']
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-gray-400 hover:text-white"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+  const stories = [
+    {
+      category: 'DOCUMENTS',
+      title: 'SHOP DOCUMENT SUMMARIZER AGENT EDITORS\' AI PROCESSING EDITS',
+      date: 'DECEMBER 2024',
+      featured: true,
+    },
+    {
+      category: 'SUMMARIES',
+      title: 'HOW AI SUMMARIZATION IS TRANSFORMING DOCUMENT WORKFLOWS',
+      date: 'NOVEMBER 2024',
+    },
+    {
+      category: 'API',
+      title: 'INTEGRATING LANGCHAIN AND LANGSMITH FOR ENTERPRISE DOCUMENT INTELLIGENCE',
+      date: 'OCTOBER 2024',
+    },
+  ];
+
+  const documents = [
+    {
+      category: 'DOCUMENTS',
+      title: 'PDF TO SUMMARY: THE MUST-HAVE AI INVESTMENT FOR ENTERPRISE TEAMS',
+      date: 'AUG 2024',
+      featured: true,
+    },
+    {
+      category: 'DOCUMENTS',
+      title: 'CELEBRITIES CLAIM THAT RAG-BASED QUERIES ARE BECOMING STANDARD',
+      date: 'OCT 2024',
+    },
+    {
+      category: 'DOCUMENTS',
+      title: 'TAILORED MINIMALISM THE DOCUMENT PROCESSING WAY',
+      date: 'NOV 2024',
+    },
+    {
+      category: 'DOCUMENTS',
+      title: 'ALL THE COOL TEAMS ARE USING VECTOR EMBEDDINGS',
+      date: 'NOV 2024',
+    },
+  ];
+
+  const features = [
+    {
+      category: 'FEATURES',
+      title: 'ELEVATE YOUR DOCUMENT WORKFLOW: TIPS AND TRICKS FOR AI-NATIVE PROCESSING',
+      date: 'MAY 2024',
+      textOnly: true,
+    },
+    {
+      category: 'FEATURES',
+      title: 'STAY AHEAD OF THE GAME WITH THE HOTTEST AI SUMMARIZATION MODELS',
+      date: 'AUG 2024',
+    },
+    {
+      category: 'FEATURES',
+      title: 'DOCUMENT INTELLIGENCE: NAVIGATING THE LATEST TRENDS IN RAG AND LLM INTEGRATION',
+      date: 'OCT 2024',
+      textOnly: true,
+    },
+    {
+      category: 'FEATURES',
+      title: 'HOW CAN YOU ACTUALLY TELL WHEN YOUR DOCUMENT IS PROPERLY PROCESSED?',
+      date: 'MAR 2024',
+      textOnly: true,
+    },
+    {
+      category: 'FEATURES',
+      title: 'DISCOVERING HIDDEN GEMS FOR YOUR DOCUMENT PIPELINE',
+      date: 'AUG 2024',
+    },
+  ];
+
+  const useCases = [
+    {
+      category: 'USE CASES',
+      title: 'WHAT IS LANGSMITH TRACING? HERE\'S EVERYTHING YOU NEED TO KNOW',
+      date: 'AUG 2024',
+      featured: true,
+    },
+    {
+      category: 'USE CASES',
+      title: 'THE BIGGEST BREAKOUT AI TRENDS IN DOCUMENT PROCESSING',
+      date: 'MAR 2024',
+    },
+    {
+      category: 'USE CASES',
+      title: 'HOW TO USE GEMINI API FOR DOCUMENT SUMMARIZATION, ACCORDING TO GOOGLE',
+      date: 'MAR 2024',
+    },
+  ];
+
+  const api = [
+    {
+      category: 'API',
+      title: 'CONSIDERING DOCUMENT PROCESSING? WITH THESE 10 API ENDPOINTS, YOUR INTEGRATION BEGINS HERE.',
+      date: 'AUG 2024',
+      featured: true,
+    },
+    {
+      category: 'API',
+      title: 'THE ENTERPRISE SET CLAIMS THAT FASTAPI IS TRENDY FOR DOCUMENT SERVICES',
+      date: 'AUG 2024',
+    },
+    {
+      category: 'API',
+      title: 'BROWSE 200+ API METHODS UNDER $300 FROM THE MOST RELIABLE DOCUMENT PROCESSING SERVICES',
+      date: 'AUG 2024',
+    },
+    {
+      category: 'API',
+      title: 'BROWSE 80 DOCUMENT FEATURES THAT WON\'T GO OUT OF STYLE WITH THE CORE API',
+      date: 'APR 2024',
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#F5F1E8] text-[#2C3E2D]">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-[#F5F1E8] border-b border-[#2C3E2D]/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-8">
+              <div className="text-2xl font-bold tracking-wider">DSA</div>
+              <nav className="hidden md:flex items-center gap-6 text-sm uppercase tracking-wider">
+                <a href="#documents" className="hover:underline">Documents</a>
+                <a href="#summaries" className="hover:underline">Summaries</a>
+                <a href="#api" className="hover:underline">API</a>
+                <a href="#features" className="hover:underline">Features</a>
+                <a href="#use-cases" className="hover:underline">Use Cases</a>
+              </nav>
+            </div>
+            <div className="flex items-center gap-4">
+              <button className="hidden md:block text-sm uppercase tracking-wider hover:underline">
+                Cart
+              </button>
+              <button
+                onClick={openSignup}
+                className="px-6 py-2 bg-[#2C3E2D] text-[#F5F1E8] text-sm uppercase tracking-wider hover:bg-[#1a241b] transition-colors"
+              >
+                Subscribe
+              </button>
+              <button
+                className="md:hidden p-2"
+                onClick={() => setMobileOpen(!mobileOpen)}
+              >
+                {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-white/5 bg-black/95 backdrop-blur-sm"
-          >
-            <div className="px-4 py-4 space-y-4">
-              <button className="block text-sm text-gray-400 hover:text-white">AI Platform</button>
-              <button className="block text-sm text-gray-400 hover:text-white">Infrastructure</button>
-              <button className="block text-sm text-gray-400 hover:text-white">Research</button>
-              <button className="block text-sm text-gray-400 hover:text-white">Company</button>
-              <div className="pt-4 border-t border-white/5 space-y-2">
-                <button
-                  onClick={handleTryNow}
-                  className="block w-full text-left text-sm text-gray-400 hover:text-white"
+      <main>
+        {/* STORIES Section */}
+        <section className="bg-[#F5F1E8] py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-12">
+              <div className="flex-shrink-0">
+                <h1 className="text-8xl font-bold leading-none tracking-tight">STORIES</h1>
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {filters.map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setActiveFilter(filter)}
+                      className={`px-4 py-2 text-xs uppercase tracking-wider border border-[#2C3E2D]/30 transition-colors ${
+                        activeFilter === filter
+                          ? 'bg-[#2C3E2D] text-[#F5F1E8]'
+                          : 'bg-transparent text-[#2C3E2D] hover:bg-[#2C3E2D]/10'
+                      }`}
+                    >
+                      {filter}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex-1 grid grid-cols-3 gap-6">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="space-y-6"
                 >
-                  Sign In
-                </button>
-                <button
-                  onClick={handleGetStarted}
-                  className="block w-full px-4 py-2 bg-white text-black text-sm font-medium rounded"
+                  <div className="aspect-[3/4] bg-[#2C3E2D]/10 rounded-lg flex items-center justify-center">
+                    <FileText className="w-16 h-16 text-[#2C3E2D]/30" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mb-2">
+                      {stories[0].category} · {stories[0].date}
+                    </p>
+                    <h3 className="text-lg font-semibold leading-tight">{stories[0].title}</h3>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="col-span-2 space-y-6"
                 >
-                  Sign Up
-                </button>
+                  <div className="aspect-[4/3] bg-[#2C3E2D]/10 rounded-lg flex items-center justify-center">
+                    <Brain className="w-20 h-20 text-[#2C3E2D]/30" />
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mb-1">
+                        {stories[1].category} · {stories[1].date}
+                      </p>
+                      <h3 className="text-xl font-semibold leading-tight">{stories[1].title}</h3>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mb-1">
+                        {stories[2].category} · {stories[2].date}
+                      </p>
+                      <h3 className="text-xl font-semibold leading-tight">{stories[2].title}</h3>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </div>
-          </motion.div>
-        )}
-      </nav>
+          </div>
+        </section>
 
-      {/* Hero Section */}
-      <motion.section
-        ref={heroRef}
-        style={{ opacity, y }}
-        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20"
-      >
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-8"
-          >
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-light tracking-tight mb-6 leading-[0.9]">
-              <span className="block">Creating</span>
-              <span className="block">the most</span>
-              <span className="block font-medium">efficient</span>
-              <span className="block">document</span>
-              <span className="block font-medium">intelligence</span>
-              <span className="block">platform.</span>
-            </h1>
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed"
-          >
-            We design and operate Document Intelligence Platforms — autonomous AI systems that optimize processing, 
-            analysis, and insights at every layer of the stack.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleGetStarted}
-              className="px-8 py-4 bg-white text-black text-lg font-medium rounded hover:bg-gray-100 transition-colors"
-            >
-              Get Started
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                const featuresSection = document.getElementById('platform')
-                featuresSection?.scrollIntoView({ behavior: 'smooth' })
-              }}
-              className="px-8 py-4 border border-white/20 text-white text-lg font-medium rounded hover:bg-white/5 transition-colors"
-            >
-              Learn More
-            </motion.button>
-          </motion.div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, repeat: Infinity, repeatType: "reverse", duration: 2 }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-        >
-          <ChevronDown className="w-6 h-6 text-gray-500" />
-        </motion.div>
-      </motion.section>
-
-      {/* Platform Section */}
-      <section id="platform" className="min-h-screen py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-20"
-          >
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-5xl md:text-6xl font-light tracking-tight">
-                <span className="font-medium">AI Platform</span>
-              </h2>
-              <p className="text-sm text-gray-400 max-w-md text-right">
-                Access the platform built for what document intelligence actually needs: 
-                processing power, reliability, performance and cost efficiency.
-              </p>
+        {/* DOCUMENTS Section */}
+        <section id="documents" className="bg-[#2C3E2D] text-[#F5F1E8] py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-8xl font-bold leading-none tracking-tight">DOCUMENTS</h2>
+              <a href="#" className="text-sm uppercase tracking-wider hover:underline">VIEW ALL</a>
             </div>
-          </motion.div>
 
-          {/* Platform Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-            {[
-              {
-                title: 'Document Processing',
-                subtitle: 'Advanced AI-powered extraction and analysis',
-                features: ['PDF, DOCX, TXT, MD support', '50MB file limit', 'Batch processing'],
-                gradient: 'from-blue-500/20 to-cyan-500/20'
-              },
-              {
-                title: 'RAG Querying',
-                subtitle: 'Intelligent document question-answering',
-                features: ['Vector search', 'Context retrieval', 'Source citations'],
-                gradient: 'from-purple-500/20 to-pink-500/20'
-              },
-              {
-                title: 'Analytics & Insights',
-                subtitle: 'Comprehensive document intelligence',
-                features: ['Processing history', 'Performance metrics', 'Usage analytics'],
-                gradient: 'from-green-500/20 to-emerald-500/20'
-              }
-            ].map((card, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="border border-white/10 rounded-lg p-8 hover:border-white/20 transition-colors bg-gradient-to-br from-white/5 to-transparent"
-              >
-                <h3 className="text-2xl font-medium mb-2">{card.title}</h3>
-                <p className="text-gray-400 mb-6 text-sm">{card.subtitle}</p>
-                <ul className="space-y-2">
-                  {card.features.map((feature, idx) => (
-                    <li key={idx} className="text-sm text-gray-500 flex items-center space-x-2">
-                      <div className="w-1 h-1 bg-white rounded-full"></div>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleGetStarted}
-              className="px-8 py-4 bg-white text-black text-lg font-medium rounded hover:bg-gray-100 transition-colors"
-            >
-              Deploy Now
-            </motion.button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Infrastructure Section */}
-      <section className="min-h-screen py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-20"
-          >
-            <h2 className="text-5xl md:text-6xl font-light tracking-tight mb-8">
-              <span className="font-medium">Infrastructure</span>
-            </h2>
-            <p className="text-lg text-gray-400 max-w-2xl">
-              Our platform is powered by uniquely efficient infrastructure. At the core of every deployment 
-              is the Document Intelligence Engine: a modular system designed to run high-density AI processing 
-              with lower power, cost, and complexity.
-            </p>
-          </motion.div>
-
-          {/* Infrastructure Features */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
-            {[
-              {
-                title: 'Cloud-Native Architecture',
-                description: 'Built for scale with containerized services, auto-scaling, and distributed processing.',
-                icon: Cloud
-              },
-              {
-                title: 'Multi-Provider Support',
-                description: 'Seamlessly integrates with MongoDB, Chroma, Redis, AWS S3, and more.',
-                icon: Database
-              },
-              {
-                title: 'Enterprise Security',
-                description: 'SOC 2 compliant with encrypted storage, secure connections, and audit logging.',
-                icon: Shield
-              },
-              {
-                title: 'Self-Hosted Options',
-                description: 'Deploy in your own cloud or VPC with full control over infrastructure and data.',
-                icon: Lock
-              }
-            ].map((item, index) => {
-              const Icon = item.icon
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.6 }}
-                  className="space-y-4"
-                >
-                  <div className="w-12 h-12 border border-white/10 rounded-lg flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <h3 className="text-2xl font-medium">{item.title}</h3>
-                  <p className="text-gray-400 leading-relaxed">{item.description}</p>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Principles Section */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-20"
-          >
-            <h2 className="text-5xl md:text-6xl font-light tracking-tight mb-4">
-              Principles of <span className="font-medium">Efficiency</span>
-            </h2>
-            <p className="text-lg text-gray-400 max-w-2xl">
-              Five rules that shape every Document Intelligence Platform
-            </p>
-          </motion.div>
-
-          <div className="space-y-16">
-            {[
-              {
-                number: '01',
-                title: 'Systems at Scale',
-                description: 'We design document intelligence not as applications but as scalable platforms. Our architecture is modular, highly available, and optimized for processing density.'
-              },
-              {
-                number: '02',
-                title: 'Efficiency by Design',
-                description: 'We pursue transformative reductions in processing time and cost, enabled by optimized pipelines and infrastructure tuned for document processing.'
-              },
-              {
-                number: '03',
-                title: 'Ground-Up Engineering',
-                description: 'We engineer platforms from the bottom up: AI-aware processing, infrastructure-aware design. Every layer is co-designed to maximize system-wide efficiency.'
-              },
-              {
-                number: '04',
-                title: 'Radical Transparency',
-                description: 'Trust is built by visibility. We provide real-time processing metrics, performance data, and comprehensive logging.'
-              },
-              {
-                number: '05',
-                title: 'Long-Term Adaptability',
-                description: 'Our designs anticipate AI model evolution. Platform architecture scales across multiple generations with redundancy models that evolve without retrofit.'
-              }
-            ].map((principle, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="flex flex-col md:flex-row gap-8 items-start"
-              >
-                <div className="flex-shrink-0">
-                  <span className="text-6xl font-light text-gray-700">{principle.number}</span>
+            <div className="grid grid-cols-4 gap-6 mb-8">
+              <div className="col-span-2">
+                <div className="aspect-[4/3] bg-[#F5F1E8]/10 rounded-lg flex items-center justify-center mb-4">
+                  <FileText className="w-24 h-24 text-[#F5F1E8]/30" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-3xl font-medium mb-4">{principle.title}</h3>
-                  <p className="text-lg text-gray-400 leading-relaxed max-w-3xl">
-                    {principle.description}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+                <p className="text-xs uppercase tracking-wider text-[#F5F1E8]/60 mb-2">
+                  {documents[0].category} · {documents[0].date}
+                </p>
+                <h3 className="text-2xl font-semibold leading-tight">{documents[0].title}</h3>
+              </div>
+
+              <div className="space-y-6">
+                {documents.slice(1).map((doc, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + idx * 0.1 }}
+                  >
+                    <div className="aspect-[3/4] bg-[#F5F1E8]/10 rounded-lg flex items-center justify-center mb-3">
+                      <Database className="w-12 h-12 text-[#F5F1E8]/30" />
+                    </div>
+                    <p className="text-xs uppercase tracking-wider text-[#F5F1E8]/60 mb-1">
+                      {doc.category} · {doc.date}
+                    </p>
+                    <h4 className="text-base font-semibold leading-tight">{doc.title}</h4>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Getting Started Section */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-20"
-          >
-            <h2 className="text-5xl md:text-6xl font-light tracking-tight mb-8">
-              Getting started <span className="font-medium">is easy</span>
-            </h2>
-          </motion.div>
+        {/* FEATURES Section */}
+        <section id="features" className="bg-[#F5F1E8] py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-8xl font-bold leading-none tracking-tight">FEATURES</h2>
+              <a href="#" className="text-sm uppercase tracking-wider hover:underline">VIEW ALL</a>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              {
-                step: '1',
-                title: 'Connect Data',
-                description: 'Choose your storage: MongoDB, Chroma, Redis, AWS S3, or local filesystem. Configure access permissions.'
-              },
-              {
-                step: '2',
-                title: 'Upload Documents',
-                description: 'Upload PDF, DOCX, TXT, or MD files. Our AI automatically processes and indexes content.'
-              },
-              {
-                step: '3',
-                title: 'Query & Analyze',
-                description: 'Ask questions, get insights, and analyze your documents using RAG-powered intelligence.'
-              }
-            ].map((item, index) => (
+            <div className="grid grid-cols-3 gap-6 mb-8">
               <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="text-center"
-              >
-                <div className="w-16 h-16 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-light">
-                  {item.step}
-                </div>
-                <h3 className="text-2xl font-medium mb-4">{item.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{item.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Security Section */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-20"
-          >
-            <h2 className="text-5xl md:text-6xl font-light tracking-tight mb-8">
-              Built-in security <span className="font-medium">and compliance</span>
-            </h2>
-            <p className="text-lg text-gray-400 max-w-3xl">
-              DocIntelligence secures every connection, pipeline, and runtime environment. 
-              Credentials are managed securely and never stored in code or configuration files, 
-              providing security and compliance from integration through deployment.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { title: 'Secure Connections', desc: 'Encrypted credentials, secure OAuth and token-based access' },
-              { title: 'Compliance-Ready', desc: 'SOC 2 Type 2, GDPR compliant with audit logging' },
-              { title: 'Isolated Environments', desc: 'Containerized runtime per task with full isolation' }
-            ].map((item, index) => (
-              <motion.div
-                key={index}
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="border border-white/10 rounded-lg p-8"
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="col-span-2"
               >
-                <h3 className="text-xl font-medium mb-3">{item.title}</h3>
-                <p className="text-gray-400 text-sm">{item.desc}</p>
+                <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mb-2">
+                  {features[0].category} · {features[0].date}
+                </p>
+                <h3 className="text-2xl font-semibold leading-tight mb-4">{features[0].title}</h3>
+                <div className="aspect-[4/3] bg-[#2C3E2D]/10 rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-20 h-20 text-[#2C3E2D]/30" />
+                </div>
+                <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mt-4 mb-2">
+                  {features[1].category} · {features[1].date}
+                </p>
+                <h4 className="text-xl font-semibold leading-tight">{features[1].title}</h4>
               </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Final CTA */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-5xl md:text-6xl font-light tracking-tight mb-8">
-              <span className="font-medium">Autonomous AI systems</span> for document intelligence
-            </h2>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleGetStarted}
-              className="px-8 py-4 bg-white text-black text-lg font-medium rounded hover:bg-gray-100 transition-colors inline-flex items-center space-x-2"
-            >
-              <span>Get Started</span>
-              <ArrowRight className="w-5 h-5" />
-            </motion.button>
-          </motion.div>
-        </div>
-      </section>
+              <div className="space-y-6">
+                {features.slice(2).map((feature, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + idx * 0.1 }}
+                  >
+                    {feature.textOnly ? (
+                      <>
+                        <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mb-2">
+                          {feature.category} · {feature.date}
+                        </p>
+                        <h4 className="text-lg font-semibold leading-tight">{feature.title}</h4>
+                      </>
+                    ) : (
+                      <>
+                        <div className="aspect-[3/4] bg-[#2C3E2D]/10 rounded-lg flex items-center justify-center mb-3">
+                          <Zap className="w-12 h-12 text-[#2C3E2D]/30" />
+                        </div>
+                        <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mb-1">
+                          {feature.category} · {feature.date}
+                        </p>
+                        <h4 className="text-base font-semibold leading-tight">{feature.title}</h4>
+                      </>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* USE CASES Section */}
+        <section id="use-cases" className="bg-[#F5F1E8] py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-8xl font-bold leading-none tracking-tight">USE CASES</h2>
+            </div>
+
+            <div className="grid grid-cols-3 gap-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="col-span-2"
+              >
+                <div className="aspect-[4/3] bg-[#2C3E2D]/10 rounded-lg flex items-center justify-center mb-4">
+                  <Workflow className="w-20 h-20 text-[#2C3E2D]/30" />
+                </div>
+                <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mb-2">
+                  {useCases[0].category} · {useCases[0].date}
+                </p>
+                <h3 className="text-2xl font-semibold leading-tight">{useCases[0].title}</h3>
+              </motion.div>
+
+              <div className="space-y-6">
+                {useCases.slice(1).map((useCase, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + idx * 0.1 }}
+                  >
+                    <div className="aspect-[3/4] bg-[#2C3E2D]/10 rounded-lg flex items-center justify-center mb-3">
+                      <Search className="w-12 h-12 text-[#2C3E2D]/30" />
+                    </div>
+                    <p className="text-xs uppercase tracking-wider text-[#2C3E2D]/60 mb-1">
+                      {useCase.category} · {useCase.date}
+                    </p>
+                    <h4 className="text-base font-semibold leading-tight">{useCase.title}</h4>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* API Section */}
+        <section id="api" className="bg-[#2C3E2D] text-[#F5F1E8] py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-8xl font-bold leading-none tracking-tight">API</h2>
+              <a href="#" className="text-sm uppercase tracking-wider hover:underline">VIEW ALL</a>
+            </div>
+
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="col-span-2"
+              >
+                <p className="text-xs uppercase tracking-wider text-[#F5F1E8]/60 mb-2">
+                  {api[0].category} · {api[0].date}
+                </p>
+                <h3 className="text-2xl font-semibold leading-tight mb-4">{api[0].title}</h3>
+                <div className="aspect-[4/3] bg-[#F5F1E8]/10 rounded-lg flex items-center justify-center">
+                  <Code className="w-20 h-20 text-[#F5F1E8]/30" />
+                </div>
+                <p className="text-xs uppercase tracking-wider text-[#F5F1E8]/60 mt-4 mb-2">
+                  {api[1].category} · {api[1].date}
+                </p>
+                <h4 className="text-xl font-semibold leading-tight">{api[1].title}</h4>
+              </motion.div>
+
+              <div className="space-y-6">
+                {api.slice(2).map((item, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + idx * 0.1 }}
+                  >
+                    <div className="aspect-[3/4] bg-[#F5F1E8]/10 rounded-lg flex items-center justify-center mb-3">
+                      <Cloud className="w-12 h-12 text-[#F5F1E8]/30" />
+                    </div>
+                    <p className="text-xs uppercase tracking-wider text-[#F5F1E8]/60 mb-1">
+                      {item.category} · {item.date}
+                    </p>
+                    <h4 className="text-base font-semibold leading-tight">{item.title}</h4>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Subscribe Section */}
+        <section className="bg-[#F5F1E8] py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-3 gap-12 items-center">
+              <div className="col-span-2">
+                <h2 className="text-8xl font-bold leading-none tracking-tight mb-8">SUBSCRIBE NOW</h2>
+                <div className="flex gap-4 max-w-md">
+                  <input
+                    type="email"
+                    placeholder="E-MAIL ADDRESS"
+                    className="flex-1 px-4 py-3 border border-[#2C3E2D]/30 bg-transparent text-[#2C3E2D] placeholder-[#2C3E2D]/50 uppercase text-sm tracking-wider focus:outline-none focus:border-[#2C3E2D]"
+                  />
+                  <button
+                    onClick={openSignup}
+                    className="px-8 py-3 bg-[#2C3E2D] text-[#F5F1E8] uppercase text-sm tracking-wider hover:bg-[#1a241b] transition-colors"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+              <div className="aspect-[3/4] bg-[#2C3E2D]/10 rounded-lg flex items-center justify-center">
+                <Globe className="w-24 h-24 text-[#2C3E2D]/30" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <span className="text-sm font-semibold">DocIntelligence</span>
+      <footer className="bg-[#F5F1E8] border-t border-[#2C3E2D]/10 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="text-2xl font-bold tracking-wider mb-4">DSA</div>
+              <p className="text-sm text-[#2C3E2D]/70">
+                Document Summarizer Agent is an AI-native document intelligence platform powered by Gemini, LangChain, and LangSmith.
+              </p>
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400">
-              <button className="hover:text-white transition-colors">Privacy Policy</button>
-              <button className="hover:text-white transition-colors">Terms of Use</button>
-              <span>© 2024 Document Intelligence Platform</span>
+            <div>
+              <h4 className="text-sm uppercase tracking-wider mb-4 font-semibold">MENU</h4>
+              <ul className="space-y-2 text-sm text-[#2C3E2D]/70">
+                <li><a href="#documents" className="hover:underline">Documents</a></li>
+                <li><a href="#summaries" className="hover:underline">Summaries</a></li>
+                <li><a href="#api" className="hover:underline">API</a></li>
+                <li><a href="#features" className="hover:underline">Features</a></li>
+                <li><a href="#use-cases" className="hover:underline">Use Cases</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm uppercase tracking-wider mb-4 font-semibold">ABOUT</h4>
+              <ul className="space-y-2 text-sm text-[#2C3E2D]/70">
+                <li><a href="#" className="hover:underline">Privacy Policy</a></li>
+                <li><a href="#" className="hover:underline">FAQ</a></li>
+                <li><a href="#" className="hover:underline">Documentation</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm uppercase tracking-wider mb-4 font-semibold">CONTACT</h4>
+              <ul className="space-y-2 text-sm text-[#2C3E2D]/70">
+                <li>api@docsummarizer.ai</li>
+                <li>Enterprise Support</li>
+                <li>Developer Portal</li>
+              </ul>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-[#2C3E2D]/10 flex items-center justify-between text-xs text-[#2C3E2D]/60">
+            <p>© 2024 Document Summarizer Agent. Powered by Gemini, LangChain & LangSmith.</p>
+            <div className="flex gap-4">
+              <a href="#" className="hover:underline">Privacy</a>
+              <a href="#" className="hover:underline">Terms</a>
             </div>
           </div>
         </div>
