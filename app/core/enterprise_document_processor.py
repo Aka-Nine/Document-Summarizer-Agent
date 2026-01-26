@@ -89,12 +89,12 @@ class EnterpriseDocumentProcessor:
                     # Try with -001 suffix
                     alt_model = f"{model_name}-001" if not model_name.endswith("-001") else model_name
                     logger.warning(f"Trying alternative model name: {alt_model}", original=model_name, error=str(e))
-                    return ChatGoogleGenerativeAI(
-                        google_api_key=settings.GEMINI_API_KEY,
+            return ChatGoogleGenerativeAI(
+                google_api_key=settings.GEMINI_API_KEY,
                         model=alt_model,
-                        temperature=0.0,
-                        max_retries=3
-                    )
+                temperature=0.0,
+                max_retries=3
+            )
                 raise
         else:
             raise ValueError(f"Unsupported LLM provider: {provider}")

@@ -9,6 +9,7 @@ import time
 import requests
 import json
 from pathlib import Path
+import pytest
 
 # Load environment
 try:
@@ -76,6 +77,7 @@ def test_redis():
         print_error(f"Redis: Failed - {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_storage_async():
     """Test filesystem storage (async)"""
     try:

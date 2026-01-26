@@ -4,6 +4,9 @@ import sys
 import os
 import asyncio
 from pathlib import Path
+import pytest
+
+pytestmark = pytest.mark.skip(reason="Manual integration sample; skipped in automated test runs")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
