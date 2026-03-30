@@ -55,7 +55,282 @@ The platform is designed with **scalability**, **modularity**, and **production 
 
 ## 🏛️ Architecture Diagram
 
-![System Architecture](./architecture.svg)
+![System Architecture](<svg viewBox="0 0 1000 720" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f1117;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1f2e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6" />
+      <stop offset="100%" style="stop-color:#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="apiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6" />
+      <stop offset="100%" style="stop-color:#6d28d9" />
+    </linearGradient>
+    <linearGradient id="celeryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b" />
+      <stop offset="100%" style="stop-color:#d97706" />
+    </linearGradient>
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981" />
+      <stop offset="100%" style="stop-color:#059669" />
+    </linearGradient>
+    <linearGradient id="llmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ef4444" />
+      <stop offset="100%" style="stop-color:#dc2626" />
+    </linearGradient>
+    <linearGradient id="redisGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316" />
+      <stop offset="100%" style="stop-color:#ea580c" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4b5563"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowYellow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Title -->
+  <text x="500" y="38" text-anchor="middle" font-size="20" font-weight="700" fill="#f9fafb" letter-spacing="1">Document Summarizer Agent — System Architecture</text>
+  <line x1="60" y1="50" x2="940" y2="50" stroke="#2d3748" stroke-width="1"/>
+
+  <!-- ── LAYER LABELS ── -->
+  <text x="28" y="120" font-size="10" fill="#6b7280" transform="rotate(-90,28,120)" text-anchor="middle">CLIENT</text>
+  <text x="28" y="230" font-size="10" fill="#6b7280" transform="rotate(-90,28,230)" text-anchor="middle">API LAYER</text>
+  <text x="28" y="390" font-size="10" fill="#6b7280" transform="rotate(-90,28,390)" text-anchor="middle">ASYNC WORKERS</text>
+  <text x="28" y="570" font-size="10" fill="#6b7280" transform="rotate(-90,28,570)" text-anchor="middle">DATA LAYER</text>
+
+  <!-- Horizontal lane dividers -->
+  <rect x="50" y="62" width="900" height="2" rx="1" fill="#1e2535" opacity="0.8"/>
+  <rect x="50" y="155" width="900" height="2" rx="1" fill="#1e2535" opacity="0.8"/>
+  <rect x="50" y="285" width="900" height="2" rx="1" fill="#1e2535" opacity="0.8"/>
+  <rect x="50" y="490" width="900" height="2" rx="1" fill="#1e2535" opacity="0.8"/>
+  <rect x="50" y="650" width="900" height="2" rx="1" fill="#1e2535" opacity="0.8"/>
+
+  <!-- ═══ CLIENT LAYER ═══ -->
+  <!-- Browser / UI -->
+  <rect x="190" y="72" width="130" height="72" rx="10" fill="url(#clientGrad)" filter="url(#shadow)"/>
+  <text x="255" y="97" text-anchor="middle" font-size="12" font-weight="700" fill="white">🌐 Browser</text>
+  <text x="255" y="113" text-anchor="middle" font-size="10" fill="#bfdbfe">React / TypeScript</text>
+  <text x="255" y="128" text-anchor="middle" font-size="10" fill="#bfdbfe">Frontend UI</text>
+
+  <!-- REST Client -->
+  <rect x="400" y="72" width="130" height="72" rx="10" fill="url(#clientGrad)" filter="url(#shadow)"/>
+  <text x="465" y="97" text-anchor="middle" font-size="12" font-weight="700" fill="white">📡 REST Client</text>
+  <text x="465" y="113" text-anchor="middle" font-size="10" fill="#bfdbfe">cURL / Postman</text>
+  <text x="465" y="128" text-anchor="middle" font-size="10" fill="#bfdbfe">API Testing</text>
+
+  <!-- Swagger UI -->
+  <rect x="610" y="72" width="130" height="72" rx="10" fill="url(#clientGrad)" filter="url(#shadow)"/>
+  <text x="675" y="97" text-anchor="middle" font-size="12" font-weight="700" fill="white">📋 Swagger UI</text>
+  <text x="675" y="113" text-anchor="middle" font-size="10" fill="#bfdbfe">/docs · /redoc</text>
+  <text x="675" y="128" text-anchor="middle" font-size="10" fill="#bfdbfe">Interactive Docs</text>
+
+  <!-- Arrows client → API -->
+  <line x1="255" y1="144" x2="370" y2="180" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowBlue)"/>
+  <line x1="465" y1="144" x2="465" y2="172" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowBlue)"/>
+  <line x1="675" y1="144" x2="590" y2="180" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowBlue)"/>
+
+  <!-- ═══ API LAYER ═══ -->
+  <!-- Middleware stack -->
+  <rect x="150" y="165" width="180" height="108" rx="10" fill="#1e2535" stroke="#374151" stroke-width="1.2" filter="url(#shadow)"/>
+  <text x="240" y="186" text-anchor="middle" font-size="11" font-weight="700" fill="#c4b5fd">⚙️ Middleware Stack</text>
+  <text x="240" y="203" text-anchor="middle" font-size="9" fill="#9ca3af">JWT Auth · Rate Limit</text>
+  <text x="240" y="218" text-anchor="middle" font-size="9" fill="#9ca3af">CORS · Security Headers</text>
+  <text x="240" y="233" text-anchor="middle" font-size="9" fill="#9ca3af">GZip · Request ID</text>
+  <text x="240" y="248" text-anchor="middle" font-size="9" fill="#9ca3af">Structured Logging</text>
+  <text x="240" y="263" text-anchor="middle" font-size="9" fill="#9ca3af">7 Layers Total</text>
+
+  <!-- FastAPI Core -->
+  <rect x="380" y="165" width="180" height="108" rx="10" fill="url(#apiGrad)" filter="url(#shadow)"/>
+  <text x="470" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="white">⚡ FastAPI Core</text>
+  <text x="470" y="208" text-anchor="middle" font-size="9" fill="#e9d5ff">POST /documents/upload</text>
+  <text x="470" y="222" text-anchor="middle" font-size="9" fill="#e9d5ff">GET  /documents/{id}/summary</text>
+  <text x="470" y="236" text-anchor="middle" font-size="9" fill="#e9d5ff">POST /documents/{id}/query</text>
+  <text x="470" y="250" text-anchor="middle" font-size="9" fill="#e9d5ff">POST /auth/register · /login</text>
+  <text x="470" y="264" text-anchor="middle" font-size="9" fill="#e9d5ff">16 Endpoints Total</text>
+
+  <!-- Auth Service -->
+  <rect x="610" y="165" width="180" height="108" rx="10" fill="#1e2535" stroke="#374151" stroke-width="1.2" filter="url(#shadow)"/>
+  <text x="700" y="186" text-anchor="middle" font-size="11" font-weight="700" fill="#c4b5fd">🔐 Auth Service</text>
+  <text x="700" y="203" text-anchor="middle" font-size="9" fill="#9ca3af">JWT Token Generation</text>
+  <text x="700" y="218" text-anchor="middle" font-size="9" fill="#9ca3af">bcrypt Password Hashing</text>
+  <text x="700" y="233" text-anchor="middle" font-size="9" fill="#9ca3af">Token Expiry Handling</text>
+  <text x="700" y="248" text-anchor="middle" font-size="9" fill="#9ca3af">Bearer Token Validation</text>
+  <text x="700" y="263" text-anchor="middle" font-size="9" fill="#9ca3af">User Session Context</text>
+
+  <!-- Arrows API layer internal -->
+  <line x1="330" y1="219" x2="378" y2="219" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="560" y1="219" x2="608" y2="219" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ═══ Arrows API → Workers ═══ -->
+  <!-- FastAPI → Redis (broker) -->
+  <line x1="420" y1="273" x2="330" y2="340" stroke="#fbbf24" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowYellow)"/>
+  <text x="358" y="322" font-size="9" fill="#fbbf24">enqueue task</text>
+
+  <!-- ═══ ASYNC WORKERS LAYER ═══ -->
+  <!-- Redis Broker -->
+  <rect x="100" y="300" width="160" height="80" rx="10" fill="url(#redisGrad)" filter="url(#shadow)"/>
+  <text x="180" y="328" text-anchor="middle" font-size="12" font-weight="700" fill="white">🔴 Redis</text>
+  <text x="180" y="345" text-anchor="middle" font-size="9" fill="#fed7aa">Message Broker</text>
+  <text x="180" y="360" text-anchor="middle" font-size="9" fill="#fed7aa">Task Queue · Cache</text>
+  <text x="180" y="372" text-anchor="middle" font-size="9" fill="#fed7aa">Session Store</text>
+
+  <!-- Arrow Redis → Celery -->
+  <line x1="260" y1="340" x2="320" y2="340" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowYellow)"/>
+
+  <!-- Celery Worker -->
+  <rect x="322" y="296" width="350" height="188" rx="12" fill="#1a1225" stroke="#d97706" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="497" y="320" text-anchor="middle" font-size="13" font-weight="700" fill="#fbbf24">⚙️ Celery Worker — Document Processing Pipeline</text>
+
+  <!-- Pipeline steps inside Celery -->
+  <rect x="338" y="330" width="70" height="40" rx="6" fill="#292435" stroke="#7c3aed" stroke-width="1"/>
+  <text x="373" y="347" text-anchor="middle" font-size="9" font-weight="600" fill="#c4b5fd">📄 Text</text>
+  <text x="373" y="360" text-anchor="middle" font-size="9" fill="#9ca3af">Extract</text>
+
+  <text x="416" y="352" text-anchor="middle" font-size="14" fill="#4b5563">→</text>
+
+  <rect x="425" y="330" width="70" height="40" rx="6" fill="#292435" stroke="#7c3aed" stroke-width="1"/>
+  <text x="460" y="347" text-anchor="middle" font-size="9" font-weight="600" fill="#c4b5fd">✂️ Chunk</text>
+  <text x="460" y="360" text-anchor="middle" font-size="9" fill="#9ca3af">Split</text>
+
+  <text x="503" y="352" text-anchor="middle" font-size="14" fill="#4b5563">→</text>
+
+  <rect x="512" y="330" width="70" height="40" rx="6" fill="#292435" stroke="#7c3aed" stroke-width="1"/>
+  <text x="547" y="347" text-anchor="middle" font-size="9" font-weight="600" fill="#c4b5fd">🔢 Embed</text>
+  <text x="547" y="360" text-anchor="middle" font-size="9" fill="#9ca3af">384-dim</text>
+
+  <text x="590" y="352" text-anchor="middle" font-size="14" fill="#4b5563">→</text>
+
+  <rect x="598" y="330" width="60" height="40" rx="6" fill="#292435" stroke="#7c3aed" stroke-width="1"/>
+  <text x="628" y="347" text-anchor="middle" font-size="9" font-weight="600" fill="#c4b5fd">🧠 LLM</text>
+  <text x="628" y="360" text-anchor="middle" font-size="9" fill="#9ca3af">Summarize</text>
+
+  <!-- Sub-label: HuggingFace model -->
+  <text x="547" y="392" text-anchor="middle" font-size="9" fill="#6b7280">HuggingFace: all-MiniLM-L6-v2</text>
+
+  <!-- RAG subsystem inside celery box -->
+  <rect x="338" y="400" width="320" height="72" rx="8" fill="#12192b" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="498" y="418" text-anchor="middle" font-size="10" font-weight="700" fill="#60a5fa">🔍 RAG Pipeline (Query Time)</text>
+  <text x="380" y="435" text-anchor="middle" font-size="9" fill="#9ca3af">Q→Embed</text>
+  <text x="415" y="435" text-anchor="middle" font-size="12" fill="#4b5563">→</text>
+  <text x="458" y="435" text-anchor="middle" font-size="9" fill="#9ca3af">Vector Search</text>
+  <text x="503" y="435" text-anchor="middle" font-size="12" fill="#4b5563">→</text>
+  <text x="548" y="435" text-anchor="middle" font-size="9" fill="#9ca3af">Top-K Chunks</text>
+  <text x="593" y="435" text-anchor="middle" font-size="12" fill="#4b5563">→</text>
+  <text x="636" y="435" text-anchor="middle" font-size="9" fill="#9ca3af">LLM Answer</text>
+  <text x="498" y="460" text-anchor="middle" font-size="9" fill="#6b7280">Grounded answers with source references</text>
+
+  <!-- LLM Cloud box -->
+  <rect x="720" y="296" width="160" height="80" rx="10" fill="url(#llmGrad)" filter="url(#shadow)"/>
+  <text x="800" y="323" text-anchor="middle" font-size="12" font-weight="700" fill="white">🤖 Gemini LLM</text>
+  <text x="800" y="340" text-anchor="middle" font-size="9" fill="#fecaca">Google Cloud AI</text>
+  <text x="800" y="355" text-anchor="middle" font-size="9" fill="#fecaca">Summarization</text>
+  <text x="800" y="368" text-anchor="middle" font-size="9" fill="#fecaca">Q&amp;A Generation</text>
+
+  <!-- Arrow Celery → LLM -->
+  <line x1="672" y1="360" x2="718" y2="348" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrow)"/>
+
+  <!-- ═══ DATA LAYER ═══ -->
+  <!-- MongoDB -->
+  <rect x="100" y="510" width="185" height="125" rx="10" fill="url(#dbGrad)" filter="url(#shadow)"/>
+  <text x="193" y="535" text-anchor="middle" font-size="12" font-weight="700" fill="white">🍃 MongoDB Atlas</text>
+  <text x="193" y="553" text-anchor="middle" font-size="9" fill="#d1fae5">users collection</text>
+  <text x="193" y="567" text-anchor="middle" font-size="9" fill="#d1fae5">documents collection</text>
+  <text x="193" y="581" text-anchor="middle" font-size="9" fill="#d1fae5">queries collection</text>
+  <text x="193" y="595" text-anchor="middle" font-size="9" fill="#a7f3d0">Metadata · Summaries</text>
+  <text x="193" y="610" text-anchor="middle" font-size="9" fill="#a7f3d0">User Accounts · Results</text>
+  <text x="193" y="625" text-anchor="middle" font-size="9" fill="#6ee7b7">Connection Pooling</text>
+
+  <!-- Chroma DB -->
+  <rect x="340" y="510" width="185" height="125" rx="10" fill="#1e2535" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="433" y="535" text-anchor="middle" font-size="12" font-weight="700" fill="#c4b5fd">🔮 Chroma DB</text>
+  <text x="433" y="553" text-anchor="middle" font-size="9" fill="#a78bfa">Vector Embeddings</text>
+  <text x="433" y="567" text-anchor="middle" font-size="9" fill="#a78bfa">384-dim float vectors</text>
+  <text x="433" y="581" text-anchor="middle" font-size="9" fill="#a78bfa">Semantic Similarity Search</text>
+  <text x="433" y="595" text-anchor="middle" font-size="9" fill="#8b5cf6">Collection: doc-intelligence</text>
+  <text x="433" y="610" text-anchor="middle" font-size="9" fill="#8b5cf6">Chunk IDs · Metadata</text>
+  <text x="433" y="625" text-anchor="middle" font-size="9" fill="#7c3aed">Chroma Cloud / Local</text>
+
+  <!-- File Storage -->
+  <rect x="580" y="510" width="185" height="125" rx="10" fill="#1e2535" stroke="#374151" stroke-width="1.2" filter="url(#shadow)"/>
+  <text x="673" y="535" text-anchor="middle" font-size="12" font-weight="700" fill="#d1d5db">📁 File Storage</text>
+  <text x="673" y="553" text-anchor="middle" font-size="9" fill="#9ca3af">Raw Document Store</text>
+  <text x="673" y="567" text-anchor="middle" font-size="9" fill="#9ca3af">PDF · DOCX · TXT</text>
+  <text x="673" y="581" text-anchor="middle" font-size="9" fill="#9ca3af">Local Filesystem</text>
+  <text x="673" y="595" text-anchor="middle" font-size="9" fill="#9ca3af">storage/ directory</text>
+  <text x="673" y="610" text-anchor="middle" font-size="9" fill="#6b7280">Multipart Upload</text>
+  <text x="673" y="625" text-anchor="middle" font-size="9" fill="#6b7280">Type Validation</text>
+
+  <!-- CI/CD box -->
+  <rect x="810" y="510" width="150" height="125" rx="10" fill="#1e2535" stroke="#374151" stroke-width="1.2" filter="url(#shadow)"/>
+  <text x="885" y="535" text-anchor="middle" font-size="11" font-weight="700" fill="#d1d5db">🚀 DevOps</text>
+  <text x="885" y="553" text-anchor="middle" font-size="9" fill="#9ca3af">GitHub Actions CI/CD</text>
+  <text x="885" y="567" text-anchor="middle" font-size="9" fill="#9ca3af">Docker Compose</text>
+  <text x="885" y="581" text-anchor="middle" font-size="9" fill="#9ca3af">Render Deploy</text>
+  <text x="885" y="595" text-anchor="middle" font-size="9" fill="#9ca3af">Pre-commit Hooks</text>
+  <text x="885" y="610" text-anchor="middle" font-size="9" fill="#6b7280">LangSmith Tracing</text>
+  <text x="885" y="625" text-anchor="middle" font-size="9" fill="#6b7280">Terraform (infra/)</text>
+
+  <!-- Arrows: Workers → Data -->
+  <line x1="420" y1="484" x2="260" y2="510" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrowGreen)"/>
+  <text x="308" y="504" font-size="8" fill="#34d399">save metadata</text>
+
+  <line x1="497" y1="484" x2="450" y2="510" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrow)"/>
+  <text x="462" y="504" font-size="8" fill="#a78bfa">store vectors</text>
+
+  <line x1="450" y1="273" x2="193" y2="510" stroke="#34d399" stroke-width="1" stroke-dasharray="3,3" opacity="0.6" marker-end="url(#arrowGreen)"/>
+
+  <!-- File upload: FastAPI → Storage -->
+  <line x1="510" y1="273" x2="673" y2="510" stroke="#6b7280" stroke-width="1" stroke-dasharray="3,3" opacity="0.6" marker-end="url(#arrow)"/>
+
+  <!-- Legend -->
+  <rect x="60" y="658" width="880" height="54" rx="8" fill="#111827" stroke="#1f2937" stroke-width="1"/>
+  <text x="90" y="676" font-size="10" fill="#6b7280" font-weight="600">LEGEND:</text>
+  <line x1="140" y1="673" x2="175" y2="673" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="180" y="676" font-size="9" fill="#9ca3af">HTTP Request</text>
+  <line x1="260" y1="673" x2="295" y2="673" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="300" y="676" font-size="9" fill="#9ca3af">Task Dispatch</text>
+  <line x1="380" y1="673" x2="415" y2="673" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="420" y="676" font-size="9" fill="#9ca3af">DB Write</text>
+  <line x1="490" y1="673" x2="525" y2="673" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="530" y="676" font-size="9" fill="#9ca3af">Vector Write</text>
+  <line x1="620" y1="673" x2="655" y2="673" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="660" y="676" font-size="9" fill="#9ca3af">LLM API Call</text>
+  <line x1="740" y1="673" x2="775" y2="673" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="780" y="676" font-size="9" fill="#9ca3af">Internal Service</text>
+
+  <!-- Second legend row -->
+  <text x="90" y="700" font-size="9" fill="#6b7280">Stack:</text>
+  <text x="125" y="700" font-size="9" fill="#60a5fa">Python · FastAPI · Celery · Redis</text>
+  <text x="320" y="700" font-size="9" fill="#c4b5fd">·  MongoDB Atlas · Chroma DB  ·</text>
+  <text x="495" y="700" font-size="9" fill="#fca5a5">Google Gemini LLM  ·</text>
+  <text x="610" y="700" font-size="9" fill="#86efac">HuggingFace Embeddings  ·</text>
+  <text x="765" y="700" font-size="9" fill="#94a3b8">Docker · GitHub Actions</text>
+</svg>
+)
 
 > The system is organized into four horizontal layers: **Client**, **API Layer**, **Async Workers**, and **Data Layer**. Each layer communicates through well-defined interfaces, enabling independent scaling and testing.
 
